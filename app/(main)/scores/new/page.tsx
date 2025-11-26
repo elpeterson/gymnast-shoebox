@@ -1,3 +1,5 @@
+'use client';
+
 import { createScore } from '../actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,8 +11,29 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { toast } from 'sonner';
+import { useTransition } from 'react';
 
 export default function AddScorePage() {
+  const [isPending, startTransition] = useTransition();
+  const handleSubmit = async (formData: FormData) => {
+    startTransition(async () => {
+      try {
+        const result = await createScore(formData);
+
+        if (result?.error) {
+          toast.error('Save Failed', {
+            description: result.error,
+          });
+        } else {
+          toast.success('Score Saved!');
+        }
+      } catch (e) {
+        toast.error('An unexpected error occurred.');
+      }
+    });
+  };
+
   return (
     <div className="max-w-2xl mx-auto py-10">
       <Card>
@@ -21,7 +44,7 @@ export default function AddScorePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createScore} className="space-y-8">
+          <form action={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="name">Competition Name</Label>
@@ -55,10 +78,12 @@ export default function AddScorePage() {
             </div>
 
             <div className="flex justify-end gap-3">
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild disabled={isPending}>
                 <a href="/dashboard">Cancel</a>
               </Button>
-              <Button type="submit">Save Scores</Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? 'Saving...' : 'Save Scores'}
+              </Button>
             </div>
           </form>
         </CardContent>

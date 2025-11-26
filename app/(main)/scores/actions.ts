@@ -37,28 +37,28 @@ export async function createScore(formData: FormData) {
     .select()
     .single();
 
-  if (compError) {
-    console.error('Error creating competition:', compError);
-    throw new Error('Failed to create competition');
-  }
+ if (compError) {
+   console.error('Error creating competition:', compError);
+   return { error: 'Failed to create competition record.' };
+ }
 
-  const scoreInserts = apparatuses.map((app) => {
-    const value = formData.get(app);
-    return {
-      competition_id: competition.id,
-      apparatus: app,
-      value: value ? parseFloat(value.toString()) : 0,
-    };
-  });
+ const scoreInserts = apparatuses.map((app) => {
+   const value = formData.get(app);
+   return {
+     competition_id: competition.id,
+     apparatus: app,
+     value: value ? parseFloat(value.toString()) : 0,
+   };
+ });
 
-  const { error: scoreError } = await supabase
-    .from('scores')
-    .insert(scoreInserts);
+ const { error: scoreError } = await supabase
+   .from('scores')
+   .insert(scoreInserts);
 
-  if (scoreError) {
-    console.error('Error saving scores:', scoreError);
-    throw new Error('Failed to save scores');
-  }
+ if (scoreError) {
+   console.error('Error saving scores:', scoreError);
+   return { error: 'Failed to save apparatus scores.' };
+ }
 
   revalidatePath('/dashboard');
   redirect('/dashboard');

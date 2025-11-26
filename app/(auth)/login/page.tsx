@@ -9,9 +9,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert'; // We'll need to add this component
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; message?: string }>;
+}) {
+  const params = await searchParams;
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-muted/50 p-4">
       <Card className="w-full max-w-md">
@@ -22,6 +29,14 @@ export default function LoginPage() {
           <CardDescription>Sign in to track your scores</CardDescription>
         </CardHeader>
         <CardContent>
+          {params?.error && (
+            <Alert variant="destructive" className="mb-4 text-left">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{params.error}</AlertDescription>
+            </Alert>
+          )}
+
           <form className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -44,7 +59,6 @@ export default function LoginPage() {
               </Button>
             </div>
 
-            {/* BETA NOTICE - Replaces Sign Up Button */}
             <div className="mt-4 rounded-md bg-blue-50 p-4 text-sm text-blue-800 border border-blue-200">
               <p className="font-semibold mb-1">Private Beta Access</p>
               <p>
