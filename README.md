@@ -31,20 +31,20 @@ This project utilizes a modern, serverless architecture designed for high perfor
 
 ## 🚀 Features & Roadmap
 
-### Phase 1: The Shoebox (Current MVP)
+### Phase 1: The Shoebox (Released)
 - [x] Secure User Authentication (Supabase Auth)
 - [x] Normalized Database Schema (Scalable for future apparatus changes)
 - [x] Historical Data Entry (Full meet entry)
 - [x] Chronological Score History
 - [x] Automatic "All-Around" Calculation
 
-### Phase 2: The Live Meet (Coming Soon)
+### Phase 2: The Live Meet (Currently Implementing)
 - [x] "Incomplete" Meet States (Enter scores live as they happen)
 - [x] Level Tracking (Level 4, 5, etc.) to contextualize scores
 - [ ] Edit/Delete capabilities for data correction
 - [x] Placement entering; Pommel 1st, Vault 4th, etc
 
-### Phase 3: The Platform
+### Phase 3: The Platform (Coming soon)
 - [ ] Gymnast Profiles (Support for multiple children)
 - [ ] Women's Gymnastics Support
 - [ ] Data Visualizations (Progress over time)
