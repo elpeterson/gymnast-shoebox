@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CompetitionActions } from '@/components/competition-actions';
+import { BetaBanner } from '@/components/beta-banner';
 
 type ScoreItem = {
   apparatus: string;
@@ -47,6 +48,7 @@ export default async function Dashboard() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-10">
+      <BetaBanner />
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Score History</h2>
         <Button asChild>

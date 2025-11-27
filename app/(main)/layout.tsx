@@ -32,6 +32,12 @@ export default async function MainLayout({
             >
               About
             </Link>
+            <Link
+              href="/account"
+              className="text-sm font-medium text-primary-foreground/80 hover:text-white transition-colors"
+            >
+              Account
+            </Link>
 
             <span className="text-sm text-primary-foreground/80 hidden sm:inline-block">
               {user.email}
