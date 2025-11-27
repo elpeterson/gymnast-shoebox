@@ -1,10 +1,10 @@
 # Gymnast Shoebox
 
+[![License](https://img.shields.io/github/license/elpeterson/gymnast-shoebox?style=flat-square&color=blueviolet)](LICENSE)
+[![Version](https://img.shields.io/github/v/release/elpeterson/gymnast-shoebox?style=flat-square&label=version)](https://github.com/elpeterson/gymnast-shoebox/releases)
 > **"Never lose a score again."**
 
 Gymnast Shoebox is a modern, mobile-first SaaS application designed to solve the data fragmentation problem in youth gymnastics.
-
-![Status](https://img.shields.io/badge/Status-MVP-blueviolet) ![Stack](https://img.shields.io/badge/Stack-Next.js_15_|_Supabase-black)
 
 ## 📖 The Problem
 For parents of competitive gymnasts, tracking progress is a nightmare of fragmentation. 
