@@ -41,7 +41,7 @@ This project utilizes a modern, serverless architecture designed for high perfor
 ### Phase 2: The Live Meet (Currently Implementing)
 - [x] "Incomplete" Meet States (Enter scores live as they happen)
 - [x] Level Tracking (Level 4, 5, etc.) to contextualize scores
-- [ ] Edit/Delete capabilities for data correction
+- [x] Edit/Delete capabilities for data correction
 - [x] Placement entering; Pommel 1st, Vault 4th, etc
 
 ### Phase 3: The Platform (Coming soon)

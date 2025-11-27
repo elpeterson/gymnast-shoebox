@@ -61,15 +61,83 @@ export async function createScore(formData: FormData) {
     };
   });
 
- const { error: scoreError } = await supabase
-   .from('scores')
-   .insert(scoreInserts);
+  const { error: scoreError } = await supabase
+    .from('scores')
+    .insert(scoreInserts);
 
- if (scoreError) {
-   console.error('Error saving scores:', scoreError);
-   return { error: 'Failed to save apparatus scores.' };
- }
+  if (scoreError) {
+    console.error('Error saving scores:', scoreError);
+    return { error: 'Failed to save apparatus scores.' };
+  }
 
   revalidatePath('/dashboard');
-  redirect('/dashboard');
+  return { success: true };
+}
+
+export async function deleteCompetition(id: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from('competitions').delete().eq('id', id);
+
+  if (error) {
+    return { error: 'Failed to delete competition.' };
+  }
+
+  revalidatePath('/dashboard');
+}
+
+export async function updateCompetition(id: string, formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect('/login');
+
+  const name = formData.get('name') as string;
+  const level = formData.get('level') as string | null;
+  const rawStartDate = formData.get('start_date') as string;
+  const rawEndDate = formData.get('end_date') as string;
+  const startDate = rawStartDate ? rawStartDate : null;
+  const endDate = rawEndDate ? rawEndDate : null;
+
+  const { error: compError } = await supabase
+    .from('competitions')
+    .update({
+      name,
+      start_date: startDate,
+      end_date: endDate,
+      level,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .eq('user_id', user.id);
+
+  if (compError) return { error: 'Failed to update competition details.' };
+
+  const apparatuses = [
+    'floor_exercise',
+    'pommel_horse',
+    'still_rings',
+    'vault',
+    'parallel_bars',
+    'high_bar',
+  ];
+
+  for (const app of apparatuses) {
+    const rawValue = formData.get(app);
+    const rawPlace = formData.get(`${app}_place`);
+
+    const value = rawValue ? parseFloat(rawValue.toString()) : null;
+    const place = rawPlace ? parseInt(rawPlace.toString()) : null;
+
+    await supabase
+      .from('scores')
+      .update({ value, place, updated_at: new Date().toISOString() })
+      .eq('competition_id', id)
+      .eq('apparatus', app);
+  }
+
+  revalidatePath('/dashboard');
+  return { success: true };
 }

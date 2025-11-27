@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CompetitionActions } from '@/components/competition-actions';
 
 type ScoreItem = {
   apparatus: string;
@@ -112,15 +113,18 @@ export default async function Dashboard() {
                     )}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-muted-foreground uppercase">
-                    All Around
-                  </p>
-                  <p className="text-2xl font-bold text-primary">
-                    {comp.all_around_score !== null
-                      ? comp.all_around_score.toFixed(3)
-                      : '0.000'}
-                  </p>
+                <div className="text-right flex flex-col items-end gap-2">
+                  <CompetitionActions id={comp.id} name={comp.name} />
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground uppercase">
+                      All Around
+                    </p>
+                    <p className="text-2xl font-bold text-primary">
+                      {comp.all_around_score !== null
+                        ? comp.all_around_score.toFixed(3)
+                        : '0.000'}
+                    </p>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
