@@ -117,7 +117,9 @@ export default async function Dashboard() {
                     All Around
                   </p>
                   <p className="text-2xl font-bold text-primary">
-                    {comp.all_around_score?.toFixed(3) || '0.000'}
+                    {comp.all_around_score !== null
+                      ? comp.all_around_score.toFixed(3)
+                      : '0.000'}
                   </p>
                 </div>
               </CardHeader>
@@ -127,9 +129,14 @@ export default async function Dashboard() {
                     <div key={index} className="space-y-1">
                       <p className="text-xs font-medium text-muted-foreground uppercase truncate">
                         {score.apparatus.replace('_', ' ')}
+                        {score.place && (
+                          <span className="ml-1 text-[10px] text-muted-foreground/70">
+                            ({score.place})
+                          </span>
+                        )}
                       </p>
                       <p className="text-lg font-semibold">
-                        {score.value.toFixed(3)}
+                        {score.value !== null ? score.value.toFixed(3) : '-'}
                       </p>
                     </div>
                   ))}
