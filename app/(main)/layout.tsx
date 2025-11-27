@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { LogoutButton } from '@/components/logout-button';
+import Link from 'next/link';
 
 export default async function MainLayout({
   children,
@@ -25,6 +26,13 @@ export default async function MainLayout({
           </h1>
 
           <div className="flex items-center gap-4">
+            <Link
+              href="/about"
+              className="text-sm font-medium text-primary-foreground/80 hover:text-white transition-colors"
+            >
+              About
+            </Link>
+
             <span className="text-sm text-primary-foreground/80 hidden sm:inline-block">
               {user.email}
             </span>
