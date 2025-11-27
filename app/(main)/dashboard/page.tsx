@@ -6,14 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type ScoreItem = {
   apparatus: string;
-  value: number;
+  value: number | null;
+  place?: number | null;
 };
 
 type Competition = {
   id: string;
   name: string;
-  competition_date: string;
-  all_around_score: number;
+  start_date: string | null;
+  end_date: string | null;
+  level?: string;
+  all_around_score: number | null;
+  all_around_place?: number | null;
   scores: ScoreItem[];
 };
 
@@ -30,7 +34,8 @@ export default async function Dashboard() {
   const { data: competitions, error } = await supabase
     .from('competitions_with_scores')
     .select('*')
-    .order('competition_date', { ascending: false });
+    .order('start_date', { ascending: false, nullsFirst: true }) // TODO: maybe make dates required if this is a problem
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching competitions:', error);
@@ -71,15 +76,39 @@ export default async function Dashboard() {
                   <CardTitle className="text-xl font-bold">
                     {comp.name}
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(comp.competition_date).toLocaleDateString(
-                      undefined,
-                      {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      }
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {!comp.start_date ? (
+                      <span className="italic">Date TBD</span>
+                    ) : (
+                      <>
+                        {new Date(comp.start_date).toLocaleDateString(
+                          undefined,
+                          {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          }
+                        )}
+                        {comp.end_date && comp.end_date !== comp.start_date && (
+                          <>
+                            {' '}
+                            –{' '}
+                            {new Date(comp.end_date).toLocaleDateString(
+                              undefined,
+                              {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              }
+                            )}
+                          </>
+                        )}
+                      </>
+                    )}
+                    {comp.level && (
+                      <span className="ml-2 inline-flex items-center rounded-full bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary ring-1 ring-inset ring-secondary/20">
+                        {comp.level}
+                      </span>
                     )}
                   </p>
                 </div>

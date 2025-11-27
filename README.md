@@ -39,15 +39,17 @@ This project utilizes a modern, serverless architecture designed for high perfor
 - [x] Automatic "All-Around" Calculation
 
 ### Phase 2: The Live Meet (Coming Soon)
-- [ ] "Incomplete" Meet States (Enter scores live as they happen)
-- [ ] Gymnast Profiles (Support for multiple children)
-- [ ] Level Tracking (Level 4, 5, etc.) to contextualize scores
+- [x] "Incomplete" Meet States (Enter scores live as they happen)
+- [x] Level Tracking (Level 4, 5, etc.) to contextualize scores
 - [ ] Edit/Delete capabilities for data correction
+- [x] Placement entering; Pommel 1st, Vault 4th, etc
 
 ### Phase 3: The Platform
+- [ ] Gymnast Profiles (Support for multiple children)
 - [ ] Women's Gymnastics Support
 - [ ] Data Visualizations (Progress over time)
 - [ ] Dark Mode
+- [ ] ...and more?
 
 ## 💻 Local Development
 
