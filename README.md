@@ -23,7 +23,7 @@ Gymnast Shoebox is exactly what it sounds like: a permanent digital container fo
 ## 🛠 Tech Stack
 This project utilizes a modern, serverless architecture designed for high performance and low maintenance.
 
-- **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
 - **Database & Auth:** [Supabase](https://supabase.com/) (PostgreSQL)
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components:** [shadcn/ui](https://ui.shadcn.com/)
