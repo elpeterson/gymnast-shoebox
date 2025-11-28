@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
-import { AuthStateListener } from '@/components/auth-state-listener';
 
 export default async function LoginPage({
   searchParams,
@@ -22,7 +21,6 @@ export default async function LoginPage({
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-muted/50 p-4">
-      <AuthStateListener />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-primary">
