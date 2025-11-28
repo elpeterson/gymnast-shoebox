@@ -19,16 +19,35 @@ export async function GET(request: Request) {
 
     if (!error) {
       return NextResponse.redirect(new URL(next, request.url));
+    } else {
+      // TODO remove this debugging later
+      console.error('VerifyOtp Error:', error.message);
+      return NextResponse.redirect(
+        new URL(
+          `/login?error=${encodeURIComponent(error.message)}`,
+          request.url
+        )
+      );
     }
-  } else if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+  }
 
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       return NextResponse.redirect(new URL(next, request.url));
+    } else {
+      // TODO remove this debug as well
+      console.error('ExchangeCode Error:', error.message);
+      return NextResponse.redirect(
+        new URL(
+          `/login?error=${encodeURIComponent(error.message)}`,
+          request.url
+        )
+      );
     }
   }
 
   return NextResponse.redirect(
-    new URL('/login?error=Invalid%20or%20expired%20link', request.url)
+    new URL('/login?error=Invalid%20Link%20Parameters', request.url)
   );
 }
