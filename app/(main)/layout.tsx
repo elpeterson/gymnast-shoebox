@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { LogoutButton } from '@/components/logout-button';
 import Link from 'next/link';
+import { UserNav } from '@/components/user-nav';
 
 export default async function MainLayout({
   children,
@@ -18,7 +18,7 @@ export default async function MainLayout({
   }
 
   return (
-    <div className="min-h-screen bg-muted/20">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <header className="sticky top-0 z-10 bg-primary border-b border-primary/10 shadow-md">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link
@@ -37,19 +37,7 @@ export default async function MainLayout({
             >
               About
             </Link>
-            <Link
-              href="/account"
-              className="text-sm font-medium text-primary-foreground/80 hover:text-white transition-colors"
-            >
-              Account
-            </Link>
-
-            <span className="text-sm text-primary-foreground/80 hidden sm:inline-block">
-              {user.email}
-            </span>
-            <div className="text-primary-foreground">
-              <LogoutButton />
-            </div>
+            <UserNav email={user.email} />
           </div>
         </div>
       </header>
