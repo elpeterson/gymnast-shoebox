@@ -45,13 +45,13 @@ This project utilizes a modern, serverless architecture designed for high perfor
 - [x] Placement entering; Pommel 1st, Vault 4th, etc
 
 ### Phase 3: The Platform (Coming soon)
-- [ ] Women's Gymnastics Support
 - [ ] Gymnast Profiles (Support for multiple children)
-- [ ] Data Visualizations (Progress over time)
-- [ ] Dark Mode
+- [ ] Women's Gymnastics Support
 
 ### Bonus And/Or Requested Features
 - [ ] Photo upload of physical scorecards
+- [ ] Data Visualizations (Progress over time)
+- [x] Dark Mode
 
 ## 💻 Local Development
 
