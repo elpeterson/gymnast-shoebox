@@ -53,6 +53,10 @@ This project utilizes a modern, serverless architecture designed for high perfor
 - [ ] Data Visualizations (Progress over time)
 - [x] Dark Mode
 
+### Known Issues (bugs)
+- [ ] Dark mode not stored in user profile (per device only)
+- [ ] All-Around Placement field missing from meet entry form
+
 ## 💻 Local Development
 
 1. **Clone the repo**
