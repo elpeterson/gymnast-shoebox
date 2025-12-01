@@ -47,6 +47,7 @@ This project utilizes a modern, serverless architecture designed for high perfor
 ### Phase 3: The Platform (Coming soon)
 - [ ] Gymnast Profiles (Support for multiple children)
 - [ ] Women's Gymnastics Support
+- [ ] Offline Support
 
 ### Bonus And/Or Requested Features
 - [ ] Photo upload of physical scorecards
