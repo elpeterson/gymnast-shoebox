@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { ensureActiveGymnast } from '@/app/actions/gymnast';
 
 export async function createScore(formData: FormData) {
   const supabase = await createClient();
@@ -10,9 +11,11 @@ export async function createScore(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  if (!user) {
-    redirect('/login');
+  const gymnastId = await ensureActiveGymnast();
+  if (!gymnastId) {
+    return { error: 'No gymnast profile found. Please create one first.' };
   }
 
   const name = formData.get('name') as string;
@@ -36,6 +39,7 @@ export async function createScore(formData: FormData) {
     .from('competitions')
     .insert({
       user_id: user.id,
+      gymnast_id: gymnastId,
       name: name,
       start_date: startDate,
       end_date: endDate,

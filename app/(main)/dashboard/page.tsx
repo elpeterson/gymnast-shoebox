@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CompetitionActions } from '@/components/competition-actions';
 import { BetaBanner } from '@/components/beta-banner';
+import { ensureActiveGymnast } from '@/app/actions/gymnast';
 
 type ScoreItem = {
   apparatus: string;
@@ -14,6 +15,7 @@ type ScoreItem = {
 
 type Competition = {
   id: string;
+  gymnast_id: string;
   name: string;
   start_date: string | null;
   end_date: string | null;
@@ -33,9 +35,12 @@ export default async function Dashboard() {
     redirect('/login');
   }
 
+  const activeGymnastId = await ensureActiveGymnast();
+
   const { data: competitions, error } = await supabase
     .from('competitions_with_scores')
     .select('*')
+    .eq('gymnast_id', activeGymnastId)
     .order('start_date', { ascending: false, nullsFirst: true }) // TODO: maybe make dates required if this is a problem
     .order('created_at', { ascending: false });
 
