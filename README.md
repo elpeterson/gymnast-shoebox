@@ -45,7 +45,7 @@ This project utilizes a modern, serverless architecture designed for high perfor
 - [x] Placement entering; Pommel 1st, Vault 4th, etc
 
 ### Phase 3: The Platform (Coming soon)
-- [ ] Gymnast Profiles (Support for multiple children)
+- [x] Gymnast Profiles (Support for multiple children)
 - [ ] Women's Gymnastics Support
 - [ ] Offline Support
 
