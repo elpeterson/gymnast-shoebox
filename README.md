@@ -52,6 +52,7 @@ This project utilizes a modern, serverless architecture designed for high perfor
 ### Bonus And/Or Requested Features
 - [ ] Photo upload of physical scorecards
 - [ ] Data Visualizations (Progress over time)
+- [ ] Import / Export CSV
 - [x] Dark Mode
 
 ### Known Issues (bugs)
