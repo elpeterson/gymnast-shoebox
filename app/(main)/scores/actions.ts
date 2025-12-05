@@ -56,12 +56,14 @@ export async function createScore(formData: FormData) {
   const scoreInserts = apparatuses.map((app) => {
     const rawValue = formData.get(app);
     const rawPlace = formData.get(`${app}_place`);
+    const rawStartValue = formData.get(`${app}_sv`);
 
     return {
       competition_id: competition.id,
       apparatus: app,
       value: rawValue ? parseFloat(rawValue.toString()) : null,
       place: rawPlace ? parseInt(rawPlace.toString()) : null,
+      start_value: rawStartValue ? parseFloat(rawStartValue.toString()) : null,
     };
   });
 
@@ -131,13 +133,22 @@ export async function updateCompetition(id: string, formData: FormData) {
   for (const app of apparatuses) {
     const rawValue = formData.get(app);
     const rawPlace = formData.get(`${app}_place`);
+    const rawStartValue = formData.get(`${app}_sv`);
 
     const value = rawValue ? parseFloat(rawValue.toString()) : null;
     const place = rawPlace ? parseInt(rawPlace.toString()) : null;
+    const startValue = rawStartValue
+      ? parseFloat(rawStartValue.toString())
+      : null;
 
     await supabase
       .from('scores')
-      .update({ value, place, updated_at: new Date().toISOString() })
+      .update({
+        value,
+        place,
+        start_value: startValue,
+        updated_at: new Date().toISOString(),
+      })
       .eq('competition_id', id)
       .eq('apparatus', app);
   }

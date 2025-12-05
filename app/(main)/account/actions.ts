@@ -27,3 +27,10 @@ export async function updatePassword(formData: FormData) {
   revalidatePath('/account');
   return { success: true };
 }
+
+export async function updateThemePreference(theme: string) {
+  const supabase = await createClient();
+  await supabase.auth.updateUser({
+    data: { theme_preference: theme },
+  });
+}
