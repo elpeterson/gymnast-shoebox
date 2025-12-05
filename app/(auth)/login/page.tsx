@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { login, signInWithMagicLink } from './actions';
+import { login, signup } from './actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,30 +13,35 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, Mail } from 'lucide-react';
-import { toast } from 'sonner';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function LoginPage() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   const handleLogin = async (formData: FormData) => {
     setError(null);
+    setSignupSuccess(false);
+
     startTransition(async () => {
-      await login(formData);
+      const result = await login(formData);
+      if (result?.error) {
+        setError(result.error);
+      }
     });
   };
 
-  const handleMagicLink = async (formData: FormData) => {
+  const handleSignup = async (formData: FormData) => {
     setError(null);
+    setSignupSuccess(false);
+
     startTransition(async () => {
-      const result = await signInWithMagicLink(formData);
+      const result = await signup(formData);
       if (result?.error) {
         setError(result.error);
-      } else {
-        toast.success('Magic Link Sent!', {
-          description: 'Check your email for a link to log in.',
-        });
+      } else if (result?.success) {
+        setSignupSuccess(true);
       }
     });
   };
@@ -59,6 +64,16 @@ export default function LoginPage() {
             </Alert>
           )}
 
+          {signupSuccess && (
+            <Alert className="mb-4 text-left border-green-200 bg-green-50 text-green-800">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertTitle>Registration Successful</AlertTitle>
+              <AlertDescription>
+                Please check your email to confirm your account.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <form className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -74,7 +89,7 @@ export default function LoginPage() {
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
               </div>
-              <Input id="password" name="password" type="password" />
+              <Input id="password" name="password" type="password" required />
             </div>
 
             <div className="pt-2 space-y-3">
@@ -98,19 +113,13 @@ export default function LoginPage() {
               </div>
 
               <Button
-                formAction={handleMagicLink}
+                formAction={handleSignup}
                 variant="outline"
                 className="w-full"
                 disabled={isPending}
               >
-                <Mail className="mr-2 h-4 w-4" />
-                Email me a Login Link
+                Register as a New User
               </Button>
-            </div>
-
-            <div className="mt-4 rounded-md bg-blue-50 p-4 text-sm text-blue-800 border border-blue-200">
-              <p className="font-semibold mb-1">Private Beta Access</p>
-              <p>Invite only. If you need an account, contact Eric.</p>
             </div>
           </form>
         </CardContent>

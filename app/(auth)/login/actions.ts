@@ -16,8 +16,7 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    console.error('Login Error:', error);
-    redirect('/login?error=Could not authenticate user');
+    return { error: error.message };
   }
 
   revalidatePath('/', 'layout');
@@ -30,18 +29,22 @@ export async function signup(formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
+  const origin =
+    process.env.NEXT_PUBLIC_BASE_URL || 'https://gymnastshoebox.elpeterson.com';
+
   const { error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      emailRedirectTo: `${origin}/auth/callback?next=/account`,
+    },
   });
 
   if (error) {
-    console.error('Signup Error:', error);
-    redirect('/login?error=Could not create user');
+    return { error: error.message };
   }
 
-  revalidatePath('/', 'layout');
-  redirect('/dashboard');
+  return { success: true };
 }
 
 export async function signInWithMagicLink(formData: FormData) {
