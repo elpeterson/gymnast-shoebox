@@ -1,9 +1,10 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useTransition, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Card,
   CardContent,
@@ -14,6 +15,7 @@ import {
 import { toast } from 'sonner';
 import { createScore, updateCompetition } from '@/app/(main)/scores/actions';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 interface CompetitionFormProps {
   initialData?: {
@@ -22,7 +24,12 @@ interface CompetitionFormProps {
     start_date: string | null;
     end_date: string | null;
     level: string | null;
-    scores: { apparatus: string; value: number | null; place: number | null }[];
+    scores: {
+      apparatus: string;
+      value: number | null;
+      place: number | null;
+      start_value: number | null;
+    }[];
   };
 }
 
@@ -30,6 +37,9 @@ export function CompetitionForm({ initialData }: CompetitionFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const isEditing = !!initialData;
+
+  const [showSV, setShowSV] = useState(false);
+  const [showPlace, setShowPlace] = useState(true);
 
   const handleSubmit = async (formData: FormData) => {
     startTransition(async () => {
@@ -61,6 +71,8 @@ export function CompetitionForm({ initialData }: CompetitionFormProps) {
     initialData?.scores.find((s) => s.apparatus === app)?.value ?? '';
   const getPlace = (app: string) =>
     initialData?.scores.find((s) => s.apparatus === app)?.place ?? '';
+  const getSV = (app: string) =>
+    initialData?.scores.find((s) => s.apparatus === app)?.start_value ?? '';
 
   return (
     <Card>
@@ -132,45 +144,90 @@ export function CompetitionForm({ initialData }: CompetitionFormProps) {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-medium leading-none">
-              Apparatus Scores
-            </h3>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium leading-none">
+                Apparatus Scores
+              </h3>
+
+              {/* TOGGLES */}
+              <div className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="show-sv"
+                    checked={showSV}
+                    onCheckedChange={setShowSV}
+                  />
+                  <Label htmlFor="show-sv" className="text-xs">
+                    Start Value
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="show-place"
+                    checked={showPlace}
+                    onCheckedChange={setShowPlace}
+                  />
+                  <Label htmlFor="show-place" className="text-xs">
+                    Place
+                  </Label>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <ScoreInput
                 label="Floor Exercise"
                 name="floor_exercise"
                 initVal={getScore('floor_exercise')}
                 initPlace={getPlace('floor_exercise')}
+                initSV={getSV('floor_exercise')}
+                showSV={showSV}
+                showPlace={showPlace}
               />
               <ScoreInput
                 label="Pommel Horse"
                 name="pommel_horse"
                 initVal={getScore('pommel_horse')}
                 initPlace={getPlace('pommel_horse')}
+                initSV={getSV('pommel_horse')}
+                showSV={showSV}
+                showPlace={showPlace}
               />
               <ScoreInput
                 label="Still Rings"
                 name="still_rings"
                 initVal={getScore('still_rings')}
                 initPlace={getPlace('still_rings')}
+                initSV={getSV('still_rings')}
+                showSV={showSV}
+                showPlace={showPlace}
               />
               <ScoreInput
                 label="Vault"
                 name="vault"
                 initVal={getScore('vault')}
                 initPlace={getPlace('vault')}
+                initSV={getSV('vault')}
+                showSV={showSV}
+                showPlace={showPlace}
               />
               <ScoreInput
                 label="Parallel Bars"
                 name="parallel_bars"
                 initVal={getScore('parallel_bars')}
                 initPlace={getPlace('parallel_bars')}
+                initSV={getSV('parallel_bars')}
+                showSV={showSV}
+                showPlace={showPlace}
               />
               <ScoreInput
                 label="High Bar"
                 name="high_bar"
                 initVal={getScore('high_bar')}
                 initPlace={getPlace('high_bar')}
+                initSV={getSV('high_bar')}
+                showSV={showSV}
+                showPlace={showPlace}
               />
             </div>
           </div>
@@ -198,19 +255,50 @@ function ScoreInput({
   name,
   initVal,
   initPlace,
+  initSV,
+  showSV,
+  showPlace,
 }: {
   label: string;
   name: string;
-  initVal: number | string;
-  initPlace: number | string;
+  initVal: any;
+  initPlace: any;
+  initSV: any;
+  showSV: boolean;
+  showPlace: boolean;
 }) {
   return (
     <div className="space-y-2 border p-3 rounded-md bg-muted/20">
       <Label className="font-semibold text-primary">{label}</Label>
       <div className="flex gap-2">
+        <div
+          className={cn('grid w-1/3 items-center gap-1.5', !showSV && 'hidden')}
+        >
+          <Label
+            htmlFor={`${name}_sv`}
+            className="text-[10px] text-muted-foreground uppercase"
+          >
+            Start Val
+          </Label>
+          <Input
+            type="number"
+            name={`${name}_sv`}
+            id={`${name}_sv`}
+            step="0.1"
+            min="0"
+            placeholder="10.0"
+            className="no-spinners px-2 text-center bg-background"
+            onWheel={(e) => e.currentTarget.blur()}
+            defaultValue={initSV}
+          />
+        </div>
+
         <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor={name} className="text-xs text-muted-foreground">
-            Score
+          <Label
+            htmlFor={name}
+            className="text-[10px] text-muted-foreground uppercase font-bold text-primary"
+          >
+            Final Score
           </Label>
           <Input
             type="number"
@@ -219,15 +307,21 @@ function ScoreInput({
             step="0.001"
             min="0"
             placeholder="0.000"
-            className="no-spinners"
+            className="no-spinners font-bold text-lg h-10 bg-background"
             onWheel={(e) => e.currentTarget.blur()}
             defaultValue={initVal}
           />
         </div>
-        <div className="grid w-1/3 items-center gap-1.5">
+
+        <div
+          className={cn(
+            'grid w-1/3 items-center gap-1.5',
+            !showPlace && 'hidden'
+          )}
+        >
           <Label
             htmlFor={`${name}_place`}
-            className="text-xs text-muted-foreground"
+            className="text-[10px] text-muted-foreground uppercase"
           >
             Place
           </Label>
@@ -237,7 +331,7 @@ function ScoreInput({
             id={`${name}_place`}
             min="1"
             placeholder="#"
-            className="no-spinners px-2 text-center"
+            className="no-spinners px-2 text-center bg-background"
             onWheel={(e) => e.currentTarget.blur()}
             defaultValue={initPlace}
           />

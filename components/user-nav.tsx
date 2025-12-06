@@ -34,6 +34,13 @@ export function UserNav({ email }: { email: string | undefined }) {
 
   const initials = email?.substring(0, 2).toUpperCase() || 'U';
 
+  const handleThemeChange = async (theme: string) => {
+    setTheme(theme);
+    // We fire-and-forget this call to update the DB
+    // You'll need to create this simple action in app/(main)/account/actions.ts
+    await updateThemePreference(theme);
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -72,15 +79,15 @@ export function UserNav({ email }: { email: string | undefined }) {
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
-                <DropdownMenuItem onClick={() => setTheme('light')}>
+                <DropdownMenuItem onClick={() => handleThemeChange('light')}>
                   <Sun className="mr-2 h-4 w-4" />
                   <span>Light</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme('dark')}>
+                <DropdownMenuItem onClick={() => handleThemeChange('dark')}>
                   <Moon className="mr-2 h-4 w-4" />
                   <span>Dark</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme('system')}>
+                <DropdownMenuItem onClick={() => handleThemeChange('system')}>
                   <Laptop className="mr-2 h-4 w-4" />
                   <span>System</span>
                 </DropdownMenuItem>

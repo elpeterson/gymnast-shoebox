@@ -67,3 +67,20 @@ export async function signInWithMagicLink(formData: FormData) {
 
   return { success: true };
 }
+
+export async function resetPassword(formData: FormData) {
+  const supabase = await createClient();
+  const email = formData.get('email') as string;
+  const origin =
+    process.env.NEXT_PUBLIC_BASE_URL || 'https://gymnastshoebox.elpeterson.com';
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/account&type=recovery`,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true };
+}
