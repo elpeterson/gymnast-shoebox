@@ -45,7 +45,7 @@ export default async function AboutPage() {
               one.
             </p>
             <p>
-              At the end of the data all of this here is <strong>your</strong>{' '}
+              At the end of the day all of this here is <strong>your</strong>{' '}
               data and it belongs to you. The README (below) has all the
               instructions you need to host your own database, and version of
               Gymnast Shoebox, by yourself so you never have to worry about{' '}
