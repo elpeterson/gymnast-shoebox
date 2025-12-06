@@ -1,5 +1,6 @@
 'use client';
 
+import { updateThemePreference } from '@/app/(main)/account/actions';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,8 +37,6 @@ export function UserNav({ email }: { email: string | undefined }) {
 
   const handleThemeChange = async (theme: string) => {
     setTheme(theme);
-    // We fire-and-forget this call to update the DB
-    // You'll need to create this simple action in app/(main)/account/actions.ts
     await updateThemePreference(theme);
   };
 
