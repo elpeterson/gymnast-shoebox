@@ -51,8 +51,10 @@ This project utilizes a modern, serverless architecture designed for high perfor
 
 ### Bonus And/Or Requested Features
 - [ ] Photo upload of physical scorecards
+- [ ] Screenshot upload (Apple Notes?)
 - [ ] Data Visualizations (Progress over time)
 - [ ] Import / Export CSV
+- [x] Starting Values
 - [x] Dark Mode
 
 ### Known Issues (bugs)
@@ -61,78 +63,97 @@ This project utilizes a modern, serverless architecture designed for high perfor
 
 ## 💻 Local Development
 
-1. **Clone the repo**
-   ```bash
-   git clone https://github.com/yourusername/gymnast-shoebox.git
-   cd gymnast-shoebox
-   ```
+### 1. Clone & Install
+```bash
+git clone https://github.com/elpeterson/gymnast-shoebox.git
+cd gymnast-shoebox
+npm install
+```
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### 2. Environment Setup
+Create a `.env.local` file in the root directory:
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_url_here
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_key_here
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
 
-3. **Environment Setup**
-   Create a `.env.local` file with your Supabase credentials:
-   ```bash
-   NEXT_PUBLIC_SUPABASE_URL=your_url_here
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_key_here
-   ```
+### 3. Database Setup (Supabase)
+Run the following SQL script in your Supabase SQL Editor. This single script creates the complete schema, relationships, security policies, and views required for the application.
 
-4. **Database Setup (Supabase)**
-   Run the following SQL script in your Supabase SQL Editor to initialize the database, views, and security policies.
+```sql
+-- 1. Create Tables
+create table public.gymnasts (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  name text not null,
+  gender text default 'male',
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+);
 
-   ```sql
-   -- 1. Create Tables
-   create table public.competitions (
-   id uuid default gen_random_uuid() primary key,
-   user_id uuid references auth.users(id) on delete cascade not null,
-   name text not null,
-   start_date date,
-   end_date date,
-   level text,
-   all_around_place integer,
-   created_at timestamptz default now() not null,
-   updated_at timestamptz default now() not null
-   );
+create table public.competitions (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  gymnast_id uuid references public.gymnasts(id) on delete cascade not null,
+  name text not null,
+  start_date date,
+  end_date date,
+  level text,
+  all_around_place integer,
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+);
 
-   create table public.scores (
-   id uuid default gen_random_uuid() primary key,
-   competition_id uuid references public.competitions(id) on delete cascade not null,
-   apparatus text not null,
-   value numeric, -- Nullable for incomplete meets
-   place integer,
-   created_at timestamptz default now() not null,
-   updated_at timestamptz default now() not null
-   );
+create table public.scores (
+  id uuid default gen_random_uuid() primary key,
+  competition_id uuid references public.competitions(id) on delete cascade not null,
+  apparatus text not null,
+  value numeric,      -- Nullable for future/incomplete meets
+  start_value numeric, -- Optional difficulty score
+  place integer,      -- Optional ranking
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+);
 
-   -- 2. Enable Security (RLS)
-   alter table public.competitions enable row level security;
-   alter table public.scores enable row level security;
+-- 2. Enable Security (RLS)
+alter table public.gymnasts enable row level security;
+alter table public.competitions enable row level security;
+alter table public.scores enable row level security;
 
-   -- 3. Create RLS Policies (CRUD)
-   -- Competitions
-   create policy "Users can view own competitions" on public.competitions for select using (auth.uid() = user_id);
-   create policy "Users can insert own competitions" on public.competitions for insert with check (auth.uid() = user_id);
-   create policy "Users can update own competitions" on public.competitions for update using (auth.uid() = user_id);
-   create policy "Users can delete own competitions" on public.competitions for delete using (auth.uid() = user_id);
+-- 3. Create RLS Policies (CRUD)
+-- Gymnasts
+create policy "Users can view own gymnasts" on public.gymnasts for select using (auth.uid() = user_id);
+create policy "Users can insert own gymnasts" on public.gymnasts for insert with check (auth.uid() = user_id);
+create policy "Users can update own gymnasts" on public.gymnasts for update using (auth.uid() = user_id);
+create policy "Users can delete own gymnasts" on public.gymnasts for delete using (auth.uid() = user_id);
 
-   -- Scores (checked via parent competition)
-   create policy "Users can view own scores" on public.scores for select using (exists (select 1 from public.competitions where competitions.id = scores.competition_id and competitions.user_id = auth.uid()));
-   create policy "Users can insert own scores" on public.scores for insert with check (exists (select 1 from public.competitions where competitions.id = scores.competition_id and competitions.user_id = auth.uid()));
-   create policy "Users can update own scores" on public.scores for update using (exists (select 1 from public.competitions where competitions.id = scores.competition_id and competitions.user_id = auth.uid()));
-   create policy "Users can delete own scores" on public.scores for delete using (exists (select 1 from public.competitions where competitions.id = scores.competition_id and competitions.user_id = auth.uid()));
-   ```
+-- Competitions
+create policy "Users can view own competitions" on public.competitions for select using (auth.uid() = user_id);
+create policy "Users can insert own competitions" on public.competitions for insert with check (auth.uid() = user_id);
+create policy "Users can update own competitions" on public.competitions for update using (auth.uid() = user_id);
+create policy "Users can delete own competitions" on public.competitions for delete using (auth.uid() = user_id);
 
-4. **Run the server**
-   ```bash
-   npm run dev
-   ```
+-- Scores (checked via parent competition)
+create policy "Users can view own scores" on public.scores for select using (exists (select 1 from public.competitions where competitions.id = scores.competition_id and competitions.user_id = auth.uid()));
+create policy "Users can insert own scores" on public.scores for insert with check (exists (select 1 from public.competitions where competitions.id = scores.competition_id and competitions.user_id = auth.uid()));
+create policy "Users can update own scores" on public.scores for update using (exists (select 1 from public.competitions where competitions.id = scores.competition_id and competitions.user_id = auth.uid()));
+create policy "Users can delete own scores" on public.scores for delete using (exists (select 1 from public.competitions where competitions.id = scores.competition_id and competitions.user_id = auth.uid()));
 
-5. **Build the server**
-   ```bash
-   npm run build
-   ```
+-- 4. Create Helper View (The "API" for the dashboard)
+create or replace view public.competitions_with_scores as
+select
+  c.id, c.user_id, c.gymnast_id, c.name, c.start_date, c.end_date, c.level, c.all_around_place, c.created_at,
+  (select json_agg(json_build_object('apparatus', s.apparatus, 'value', s.value, 'start_value', s.start_value, 'place', s.place)) from public.scores s where s.competition_id = c.id) as scores,
+  (select sum(s.value) from public.scores s where s.competition_id = c.id) as all_around_score
+from public.competitions c;
 
-## 📄 License
-[MIT](LICENSE)
+-- 5. Secure the View
+alter view public.competitions_with_scores set (security_invoker = true);
+grant select on public.competitions_with_scores to authenticated;
+```
+
+### 4. Run the Server
+```bash
+npm run dev
+```
