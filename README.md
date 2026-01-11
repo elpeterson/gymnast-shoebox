@@ -1,10 +1,30 @@
 # Gymnast Shoebox
 
-[![License](https://img.shields.io/github/license/elpeterson/gymnast-shoebox?style=flat-square&color=blueviolet)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blueviolet?style=flat-square)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/elpeterson/gymnast-shoebox?style=flat-square&label=version)](https://github.com/elpeterson/gymnast-shoebox/releases)
+
 > **"Never lose a score again."**
 
 Gymnast Shoebox is a modern, mobile-first SaaS application designed to solve the data fragmentation problem in youth gymnastics.
+
+## 🚀 Features
+*   **Multi-Gymnast Support:** Track scores for multiple children (siblings) under one parent account.
+*   **MeetScoresOnline Integration:** Automatically import meet details and scores using an MSO Athlete ID.
+*   **Live Meet Entry:** Enter scores as they happen. Supports incomplete meets and future schedule planning.
+*   **Detailed Scoring:** Track Final Score, Placement, and Start Values.
+*   **Deep Customization:** Toggle fields (like Start Value) to declutter the UI on small screens.
+*   **Themeable:** Dark Mode support with custom "Sterling Gym" branding.
+*   **Secure:** Row Level Security (RLS) ensures data privacy.
+
+## 🚧 Coming Soon
+-   **Women's Gymnastics Support:** Support for uneven bars and beam.
+-   **Offline Support:** PWA capabilities for warehouses with poor signal.
+-   **Data Visualizations:** Charts to track progress over the season.
+-   **Media Uploads:** Attach photos of scorecards or screenshots to meets.
+
+## 🐛 Known Issues
+-   Dark mode preference is currently stored per-device (local storage), not synced to the user profile.
+-   The "All-Around Placement" field is currently missing from the manual entry form (though it imports correctly from MSO).
 
 ## 📖 The Problem
 For parents of competitive gymnasts, tracking progress is a nightmare of fragmentation. 
@@ -29,37 +49,6 @@ This project utilizes a modern, serverless architecture designed for high perfor
 - **UI Components:** [shadcn/ui](https://ui.shadcn.com/)
 - **Deployment:** [Vercel](https://vercel.com/)
 
-## 🚀 Features & Roadmap
-
-### Phase 1: The Shoebox (Released)
-- [x] Secure User Authentication (Supabase Auth)
-- [x] Normalized Database Schema (Scalable for future apparatus changes)
-- [x] Historical Data Entry (Full meet entry)
-- [x] Chronological Score History
-- [x] Automatic "All-Around" Calculation
-
-### Phase 2: The Live Meet (Released)
-- [x] "Incomplete" Meet States (Enter scores live as they happen)
-- [x] Level Tracking (Level 4, 5, etc.) to contextualize scores
-- [x] Edit/Delete capabilities for data correction
-- [x] Placement entering; Pommel 1st, Vault 4th, etc
-
-### Phase 3: The Platform (Coming soon)
-- [x] Gymnast Profiles (Support for multiple children)
-- [ ] Women's Gymnastics Support
-- [ ] Offline Support
-
-### Bonus And/Or Requested Features
-- [ ] Photo upload of physical scorecards
-- [ ] Screenshot upload (Apple Notes?)
-- [ ] Data Visualizations (Progress over time)
-- [ ] Import / Export CSV
-- [x] Starting Values
-- [x] Dark Mode
-
-### Known Issues (bugs)
-- [ ] Dark mode not stored in user profile (per device only)
-- [ ] All-Around Placement field missing from meet entry form
 
 ## 💻 Local Development
 
@@ -87,6 +76,7 @@ create table public.gymnasts (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
   name text not null,
+  mso_id text, -- MeetScoresOnline Athlete ID
   gender text default 'male',
   created_at timestamptz default now() not null,
   updated_at timestamptz default now() not null
@@ -144,7 +134,10 @@ create policy "Users can delete own scores" on public.scores for delete using (e
 create or replace view public.competitions_with_scores as
 select
   c.id, c.user_id, c.gymnast_id, c.name, c.start_date, c.end_date, c.level, c.all_around_place, c.created_at,
-  (select json_agg(json_build_object('apparatus', s.apparatus, 'value', s.value, 'start_value', s.start_value, 'place', s.place)) from public.scores s where s.competition_id = c.id) as scores,
+  coalesce(
+    (select json_agg(json_build_object('apparatus', s.apparatus, 'value', s.value, 'start_value', s.start_value, 'place', s.place)) from public.scores s where s.competition_id = c.id),
+    '[]'::json
+  ) as scores,
   (select sum(s.value) from public.scores s where s.competition_id = c.id) as all_around_score
 from public.competitions c;
 
