@@ -67,12 +67,15 @@ export function CompetitionForm({ initialData }: CompetitionFormProps) {
     });
   };
 
-  const getScore = (app: string) =>
-    initialData?.scores.find((s) => s.apparatus === app)?.value ?? '';
-  const getPlace = (app: string) =>
-    initialData?.scores.find((s) => s.apparatus === app)?.place ?? '';
-  const getSV = (app: string) =>
-    initialData?.scores.find((s) => s.apparatus === app)?.start_value ?? '';
+const getScore = (app: string) =>
+  (initialData?.scores || []).find((s) => s.apparatus === app)?.value ?? '';
+
+const getPlace = (app: string) =>
+  (initialData?.scores || []).find((s) => s.apparatus === app)?.place ?? '';
+
+const getSV = (app: string) =>
+  (initialData?.scores || []).find((s) => s.apparatus === app)?.start_value ??
+  '';
 
   return (
     <Card>

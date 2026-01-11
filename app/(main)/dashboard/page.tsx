@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CompetitionActions } from '@/components/competition-actions';
 import { BetaBanner } from '@/components/beta-banner';
 import { ensureActiveGymnast } from '@/app/actions/gymnast';
+import { CloudDownload } from 'lucide-react';
 
 type ScoreItem = {
   apparatus: string;
@@ -56,9 +57,17 @@ export default async function Dashboard() {
       <BetaBanner />
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Score History</h2>
-        <Button asChild>
-          <Link href="/scores/new">Add Score</Link>
-        </Button>
+        <div className="flex gap-3">
+          <Button asChild variant="outline">
+            <Link href="/import">
+              <CloudDownload className="mr-2 h-4 w-4" />
+              Import
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/scores/new">Add Score</Link>
+          </Button>
+        </div>
       </div>
 
       {!hasCompetitions ? (
