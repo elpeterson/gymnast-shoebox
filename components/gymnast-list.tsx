@@ -38,6 +38,7 @@ import {
 type Gymnast = {
   id: string;
   name: string;
+  mso_id?: string | null;
 };
 
 export function GymnastList({ gymnasts }: { gymnasts: Gymnast[] }) {
@@ -91,7 +92,14 @@ function GymnastRow({ gymnast }: { gymnast: Gymnast }) {
         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
           <User className="h-4 w-4" />
         </div>
-        <span className="font-medium">{gymnast.name}</span>
+        <div className="flex flex-col">
+          <span className="font-medium">{gymnast.name}</span>
+          {gymnast.mso_id && (
+            <span className="text-[10px] text-muted-foreground">
+              MSO: {gymnast.mso_id}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
@@ -107,22 +115,39 @@ function GymnastRow({ gymnast }: { gymnast: Gymnast }) {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Rename Gymnast</DialogTitle>
+              <DialogTitle>Edit Gymnast Profile</DialogTitle>
               <DialogDescription>
-                Change the display name for this profile.
+                Update profile details and integrations.
               </DialogDescription>
             </DialogHeader>
             <form action={handleUpdate}>
-              <div className="py-4">
-                <Label htmlFor="name" className="mb-2 block">
-                  Name
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  defaultValue={gymnast.name}
-                  required
-                />
+              <div className="py-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    defaultValue={gymnast.name}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="mso_id">MeetScoresOnline Athlete ID</Label>
+                  <Input
+                    id="mso_id"
+                    name="mso_id"
+                    defaultValue={gymnast.mso_id || ''}
+                    placeholder="e.g. 1184668"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Found in the URL:{' '}
+                    <code>
+                      meetscoresonline.com/Athlete.MyScores/
+                      <strong>1184668</strong>
+                    </code>
+                  </p>
+                </div>
               </div>
               <DialogFooter>
                 <Button

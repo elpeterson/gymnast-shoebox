@@ -91,11 +91,17 @@ export async function updateGymnast(id: string, formData: FormData) {
   if (!user) return { error: 'Not authenticated' };
 
   const name = formData.get('name') as string;
+  const mso_id = formData.get('mso_id') as string;
+
   if (!name) return { error: 'Name is required' };
 
   const { error } = await supabase
     .from('gymnasts')
-    .update({ name, updated_at: new Date().toISOString() })
+    .update({
+      name,
+      mso_id: mso_id || null,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', id)
     .eq('user_id', user.id);
 
