@@ -33,9 +33,6 @@ const APPARATUS_MAP: Record<string, string> = {
   'Uneven Bars': 'uneven_bars',
 };
 
-/**
- * STEP 1: Fetch the list of meets from the Athlete's Profile Page
- */
 export async function fetchMsoMeets(msoId: string) {
   const supabase = await createClient();
   const activeGymnastId = await ensureActiveGymnast();
@@ -61,41 +58,25 @@ export async function fetchMsoMeets(msoId: string) {
     const $ = cheerio.load(html);
     const meets: MsoMeetSummary[] = [];
 
-    // Parse Strategy: Look for the result links
     $('a[href^="/results/"]').each((i, el) => {
       const link = $(el);
       const href = link.attr('href');
-
-      // Navigate up to the table row (tr) to find sibling data
       const row = link.closest('tr');
       if (row.length === 0) return;
 
       const cols = row.find('td');
 
-      // CORRECTED MSO COLUMN MAPPING:
-      // Col 0: Meet Name (Link is usually here)
-      // Col 1: Club / Team
-      // Col 2: Level
-      // Col 3: Division
-      // Col 4: Date (Sometimes this is missing/empty)
-
-      // 1. Grab Meet Name (Col 0)
-      // We prefer the text in the cell, fallback to link text
       let name = $(cols[0]).text().trim();
       if (!name) name = link.text().trim();
 
-      // 2. Grab Level (Col 2)
       const level = $(cols[2]).text().trim();
 
-      // 3. Grab Date (Col 4)
-      // If the table doesn't have a 5th column, or it's empty, use TBD
       let dateStr = 'Date TBD';
       if (cols.length > 4) {
         const val = $(cols[4]).text().trim();
         if (val) dateStr = val;
       }
 
-      // Filter out rows where Name is suspiciously identical to Level (parsing artifact)
       if (name === level && name.length < 5) return;
 
       if (name && href && !meets.find((m) => m.id === href)) {
@@ -132,9 +113,6 @@ export async function fetchMsoMeets(msoId: string) {
   }
 }
 
-/**
- * STEP 2: Import a specific meet
- */
 export async function importMsoMeet(meet: MsoMeetSummary) {
   const supabase = await createClient();
   const gymnastId = await ensureActiveGymnast();
@@ -155,21 +133,15 @@ export async function importMsoMeet(meet: MsoMeetSummary) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    // --- 1. Scrape Meet Details (Source of Truth) ---
-    // We scrape the name again from the detail page because the summary page
-    // might truncate it or format it differently.
     let realName = $('h1.event-title').text().trim();
-    if (!realName) realName = meet.name; // Fallback
+    if (!realName) realName = meet.name;
 
-    // Scrape the detailed date
     const realDateStr =
       $('#MeetDetails h5 strong').first().text().trim() || meet.dateStr;
 
-    // --- 2. Scrape Scores ---
     const scoresToInsert: any[] = [];
     let allAroundPlace: number | null = null;
 
-    // Target the specific table inside the athlete card
     $('#athlete table tbody tr').each((i, row) => {
       const $row = $(row);
       const eventLabel = $row.find('th').text().trim();
@@ -177,7 +149,7 @@ export async function importMsoMeet(meet: MsoMeetSummary) {
       const placeText = $row.find('span.place').text().trim();
 
       const value = parseFloat(scoreText);
-      const place = parseInt(placeText.replace('T', '')); // Remove 'T' for ties
+      const place = parseInt(placeText.replace('T', ''));
 
       if (eventLabel === 'AA') {
         if (!isNaN(place)) allAroundPlace = place;
@@ -193,7 +165,6 @@ export async function importMsoMeet(meet: MsoMeetSummary) {
       }
     });
 
-    // --- 3. Date Parsing ---
     let startDate: string | null = null;
     let endDate: string | null = null;
 
@@ -212,7 +183,6 @@ export async function importMsoMeet(meet: MsoMeetSummary) {
       console.log('Date parsing skipped for:', realDateStr);
     }
 
-    // --- 4. Database Insert ---
     const { data: comp, error: compError } = await supabase
       .from('competitions')
       .insert({

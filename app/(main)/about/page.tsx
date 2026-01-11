@@ -6,14 +6,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Coffee, Heart } from 'lucide-react';
+import { Coffee } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function AboutPage() {
-  // 1. Read the README.md file
   const filePath = path.join(process.cwd(), 'README.md');
   let content = '';
 

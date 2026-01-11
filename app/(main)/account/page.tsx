@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { PasswordForm } from '@/components/password-form';
-import { GymnastList } from '@/components/gymnast-list'; // Import it
+import { GymnastList } from '@/components/gymnast-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default async function AccountPage() {
@@ -9,10 +9,9 @@ export default async function AccountPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch gymnasts for the list
   const { data: gymnasts } = await supabase
     .from('gymnasts')
-    .select('id, name')
+    .select('id, name, mso_id')
     .eq('user_id', user?.id)
     .order('created_at', { ascending: true });
 
@@ -24,7 +23,6 @@ export default async function AccountPage() {
 
       <Tabs defaultValue="gymnasts" className="space-y-4">
         <TabsList>
-          {/* Enabled Gymnasts Tab, made it default for visibility */}
           <TabsTrigger value="gymnasts">Gymnasts</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="general" disabled>
