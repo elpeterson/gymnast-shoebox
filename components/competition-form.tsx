@@ -179,6 +179,24 @@ const getSV = (app: string) =>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <ScoreInput
+                label="Uneven Bars"
+                name="uneven_bars"
+                initVal={getScore('uneven_bars')}
+                initPlace={getPlace('uneven_bars')}
+                initSV={getSV('uneven_bars')}
+                showSV={showSV}
+                showPlace={showPlace}
+              />
+              <ScoreInput
+                label="Balance Beam"
+                name="balance_beam"
+                initVal={getScore('balance_beam')}
+                initPlace={getPlace('balance_beam')}
+                initSV={getSV('balance_beam')}
+                showSV={showSV}
+                showPlace={showPlace}
+              />
+              <ScoreInput
                 label="Floor Exercise"
                 name="floor_exercise"
                 initVal={getScore('floor_exercise')}
