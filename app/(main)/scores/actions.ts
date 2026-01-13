@@ -28,9 +28,11 @@ export async function createScore(formData: FormData) {
 
   const apparatuses = [
     'floor_exercise',
+    'vault',
+    'uneven_bars',
+    'balance_beam',
     'pommel_horse',
     'still_rings',
-    'vault',
     'parallel_bars',
     'high_bar',
   ];
@@ -53,19 +55,28 @@ export async function createScore(formData: FormData) {
     return { error: 'Failed to create competition record.' };
   }
 
-  const scoreInserts = apparatuses.map((app) => {
+  const scoreInserts = apparatuses
+  .map((app) => {
     const rawValue = formData.get(app);
     const rawPlace = formData.get(`${app}_place`);
     const rawStartValue = formData.get(`${app}_sv`);
 
+    const valueStr = rawValue?.toString().trim() ?? '';
+    const placeStr = rawPlace?.toString().trim() ?? '';
+    const svStr = rawStartValue?.toString().trim() ?? '';
+
+    // If nothing entered for this apparatus, skip it entirely
+    if (!valueStr && !placeStr && !svStr) return null;
+
     return {
       competition_id: competition.id,
       apparatus: app,
-      value: rawValue ? parseFloat(rawValue.toString()) : null,
-      place: rawPlace ? parseInt(rawPlace.toString()) : null,
-      start_value: rawStartValue ? parseFloat(rawStartValue.toString()) : null,
+      value: valueStr ? parseFloat(valueStr) : null,
+      place: placeStr ? parseInt(placeStr) : null,
+      start_value: svStr ? parseFloat(svStr) : null,
     };
-  });
+  })
+  .filter(Boolean);
 
   const { error: scoreError } = await supabase
     .from('scores')
@@ -123,9 +134,11 @@ export async function updateCompetition(id: string, formData: FormData) {
 
   const apparatuses = [
     'floor_exercise',
+    'vault',
+    'uneven_bars',
+    'balance_beam',
     'pommel_horse',
     'still_rings',
-    'vault',
     'parallel_bars',
     'high_bar',
   ];
