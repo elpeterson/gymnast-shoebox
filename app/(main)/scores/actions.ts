@@ -38,6 +38,9 @@ export async function createScore(formData: FormData) {
   const startDate = rawStartDate || null;
   const endDate = rawEndDate || null;
 
+  const rawAAPlace = formData.get('all_around_place');
+  const allAroundPlace = rawAAPlace ? parseInt(rawAAPlace.toString()) : null;
+
   const { data: competition, error: compError } = await supabase
     .from('competitions')
     .insert({
@@ -47,6 +50,7 @@ export async function createScore(formData: FormData) {
       start_date: startDate,
       end_date: endDate,
       level,
+      all_around_place: allAroundPlace,
     })
     .select()
     .single();
@@ -126,6 +130,9 @@ export async function updateCompetition(id: string, formData: FormData) {
   const startDate = rawStartDate || null;
   const endDate = rawEndDate || null;
 
+  const rawAAPlace = formData.get('all_around_place');
+  const allAroundPlace = rawAAPlace ? parseInt(rawAAPlace.toString()) : null;
+
   const { error: compError } = await supabase
     .from('competitions')
     .update({
@@ -133,6 +140,7 @@ export async function updateCompetition(id: string, formData: FormData) {
       start_date: startDate,
       end_date: endDate,
       level,
+      all_around_place: allAroundPlace,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
