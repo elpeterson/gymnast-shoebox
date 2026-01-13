@@ -24,6 +24,7 @@ interface CompetitionFormProps {
     start_date: string | null;
     end_date: string | null;
     level: string | null;
+    all_around_place: number | null;
     scores: {
       apparatus: string;
       value: number | null;
@@ -55,9 +56,7 @@ export function CompetitionForm({ initialData }: CompetitionFormProps) {
         if (result?.error) {
           toast.error('Operation Failed', { description: result.error });
         } else {
-          toast.success(
-            isEditing ? 'Competition Updated' : 'Competition Created'
-          );
+          toast.success(isEditing ? 'Competition Updated' : 'Competition Created');
           router.push('/dashboard');
           router.refresh();
         }
@@ -67,22 +66,20 @@ export function CompetitionForm({ initialData }: CompetitionFormProps) {
     });
   };
 
-const getScore = (app: string) =>
-  (initialData?.scores || []).find((s) => s.apparatus === app)?.value ?? '';
+  const getScore = (app: string) =>
+    (initialData?.scores || []).find((s) => s.apparatus === app)?.value ?? '';
 
-const getPlace = (app: string) =>
-  (initialData?.scores || []).find((s) => s.apparatus === app)?.place ?? '';
+  const getPlace = (app: string) =>
+    (initialData?.scores || []).find((s) => s.apparatus === app)?.place ?? '';
 
-const getSV = (app: string) =>
-  (initialData?.scores || []).find((s) => s.apparatus === app)?.start_value ??
-  '';
+  const getSV = (app: string) =>
+    (initialData?.scores || []).find((s) => s.apparatus === app)?.start_value ??
+    '';
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          {isEditing ? 'Edit Competition' : 'Add New Competition'}
-        </CardTitle>
+        <CardTitle>{isEditing ? 'Edit Competition' : 'Add New Competition'}</CardTitle>
         <CardDescription>
           {isEditing
             ? 'Update the details and scores below.'
@@ -103,6 +100,7 @@ const getSV = (app: string) =>
                 defaultValue={initialData?.name}
               />
             </div>
+
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="level">Level (Optional)</Label>
               <Input
@@ -113,15 +111,31 @@ const getSV = (app: string) =>
                 defaultValue={initialData?.level || ''}
               />
             </div>
+
+            {/* All-Around place is stored on competitions.all_around_place */}
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="all_around_place">
+                All Around Place{' '}
+                <span className="text-muted-foreground font-normal">(Optional)</span>
+              </Label>
+              <Input
+                type="number"
+                name="all_around_place"
+                id="all_around_place"
+                min={1}
+                placeholder="e.g. 2"
+                className="no-spinners"
+                onWheel={(e) => e.currentTarget.blur()}
+                defaultValue={initialData?.all_around_place ?? ''}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="start_date">
                 Start Date{' '}
-                <span className="text-muted-foreground font-normal">
-                  (Optional)
-                </span>
+                <span className="text-muted-foreground font-normal">(Optional)</span>
               </Label>
               <Input
                 type="date"
@@ -130,12 +144,11 @@ const getSV = (app: string) =>
                 defaultValue={initialData?.start_date || ''}
               />
             </div>
+
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="end_date">
                 End Date{' '}
-                <span className="text-muted-foreground font-normal">
-                  (Optional)
-                </span>
+                <span className="text-muted-foreground font-normal">(Optional)</span>
               </Label>
               <Input
                 type="date"
@@ -148,9 +161,7 @@ const getSV = (app: string) =>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium leading-none">
-                Apparatus Scores
-              </h3>
+              <h3 className="text-sm font-medium leading-none">Apparatus Scores</h3>
 
               {/* TOGGLES */}
               <div className="flex gap-4">
@@ -258,11 +269,7 @@ const getSV = (app: string) =>
               <a href="/dashboard">Cancel</a>
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending
-                ? 'Saving...'
-                : isEditing
-                ? 'Update Scores'
-                : 'Save Scores'}
+              {isPending ? 'Saving...' : isEditing ? 'Update Scores' : 'Save Scores'}
             </Button>
           </div>
         </form>
@@ -292,9 +299,7 @@ function ScoreInput({
     <div className="space-y-2 border p-3 rounded-md bg-muted/20">
       <Label className="font-semibold text-primary">{label}</Label>
       <div className="flex gap-2">
-        <div
-          className={cn('grid w-1/3 items-center gap-1.5', !showSV && 'hidden')}
-        >
+        <div className={cn('grid w-1/3 items-center gap-1.5', !showSV && 'hidden')}>
           <Label
             htmlFor={`${name}_sv`}
             className="text-[10px] text-muted-foreground uppercase"
@@ -334,12 +339,7 @@ function ScoreInput({
           />
         </div>
 
-        <div
-          className={cn(
-            'grid w-1/3 items-center gap-1.5',
-            !showPlace && 'hidden'
-          )}
-        >
+        <div className={cn('grid w-1/3 items-center gap-1.5', !showPlace && 'hidden')}>
           <Label
             htmlFor={`${name}_place`}
             className="text-[10px] text-muted-foreground uppercase"
