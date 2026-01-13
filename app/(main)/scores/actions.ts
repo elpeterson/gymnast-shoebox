@@ -5,6 +5,17 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { ensureActiveGymnast } from '@/app/actions/gymnast';
 
+const APPARATUSES = [
+  'floor_exercise',
+  'vault',
+  'uneven_bars',
+  'balance_beam',
+  'pommel_horse',
+  'still_rings',
+  'parallel_bars',
+  'high_bar',
+];
+
 export async function createScore(formData: FormData) {
   const supabase = await createClient();
 
@@ -23,29 +34,19 @@ export async function createScore(formData: FormData) {
 
   const rawStartDate = formData.get('start_date') as string;
   const rawEndDate = formData.get('end_date') as string;
-  const startDate = rawStartDate ? rawStartDate : null;
-  const endDate = rawEndDate ? rawEndDate : null;
 
-  const apparatuses = [
-    'floor_exercise',
-    'vault',
-    'uneven_bars',
-    'balance_beam',
-    'pommel_horse',
-    'still_rings',
-    'parallel_bars',
-    'high_bar',
-  ];
+  const startDate = rawStartDate || null;
+  const endDate = rawEndDate || null;
 
   const { data: competition, error: compError } = await supabase
     .from('competitions')
     .insert({
       user_id: user.id,
       gymnast_id: gymnastId,
-      name: name,
+      name,
       start_date: startDate,
       end_date: endDate,
-      level: level,
+      level,
     })
     .select()
     .single();
@@ -55,36 +56,38 @@ export async function createScore(formData: FormData) {
     return { error: 'Failed to create competition record.' };
   }
 
-  const scoreInserts = apparatuses
-  .map((app) => {
-    const rawValue = formData.get(app);
-    const rawPlace = formData.get(`${app}_place`);
-    const rawStartValue = formData.get(`${app}_sv`);
+  const scoreInserts = APPARATUSES
+    .map((app) => {
+      const rawValue = formData.get(app);
+      const rawPlace = formData.get(`${app}_place`);
+      const rawSV = formData.get(`${app}_sv`);
 
-    const valueStr = rawValue?.toString().trim() ?? '';
-    const placeStr = rawPlace?.toString().trim() ?? '';
-    const svStr = rawStartValue?.toString().trim() ?? '';
+      const valueStr = rawValue?.toString().trim() ?? '';
+      const placeStr = rawPlace?.toString().trim() ?? '';
+      const svStr = rawSV?.toString().trim() ?? '';
 
-    // If nothing entered for this apparatus, skip it entirely
-    if (!valueStr && !placeStr && !svStr) return null;
+      // Skip empty apparatus
+      if (!valueStr && !placeStr && !svStr) return null;
 
-    return {
-      competition_id: competition.id,
-      apparatus: app,
-      value: valueStr ? parseFloat(valueStr) : null,
-      place: placeStr ? parseInt(placeStr) : null,
-      start_value: svStr ? parseFloat(svStr) : null,
-    };
-  })
-  .filter(Boolean);
+      return {
+        competition_id: competition.id,
+        apparatus: app,
+        value: valueStr ? parseFloat(valueStr) : null,
+        place: placeStr ? parseInt(placeStr) : null,
+        start_value: svStr ? parseFloat(svStr) : null,
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
 
-  const { error: scoreError } = await supabase
-    .from('scores')
-    .insert(scoreInserts);
+  if (scoreInserts.length > 0) {
+    const { error: scoreError } = await supabase
+      .from('scores')
+      .insert(scoreInserts);
 
-  if (scoreError) {
-    console.error('Error saving scores:', scoreError);
-    return { error: 'Failed to save apparatus scores.' };
+    if (scoreError) {
+      console.error('Error saving scores:', scoreError);
+      return { error: 'Failed to save apparatus scores.' };
+    }
   }
 
   revalidatePath('/dashboard');
@@ -94,7 +97,10 @@ export async function createScore(formData: FormData) {
 export async function deleteCompetition(id: string) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('competitions').delete().eq('id', id);
+  const { error } = await supabase
+    .from('competitions')
+    .delete()
+    .eq('id', id);
 
   if (error) {
     return { error: 'Failed to delete competition.' };
@@ -105,18 +111,20 @@ export async function deleteCompetition(id: string) {
 
 export async function updateCompetition(id: string, formData: FormData) {
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) redirect('/login');
 
   const name = formData.get('name') as string;
   const level = formData.get('level') as string | null;
+
   const rawStartDate = formData.get('start_date') as string;
   const rawEndDate = formData.get('end_date') as string;
-  const startDate = rawStartDate ? rawStartDate : null;
-  const endDate = rawEndDate ? rawEndDate : null;
+
+  const startDate = rawStartDate || null;
+  const endDate = rawEndDate || null;
 
   const { error: compError } = await supabase
     .from('competitions')
@@ -130,40 +138,41 @@ export async function updateCompetition(id: string, formData: FormData) {
     .eq('id', id)
     .eq('user_id', user.id);
 
-  if (compError) return { error: 'Failed to update competition details.' };
+  if (compError) {
+    console.error('Error updating competition:', compError);
+    return { error: 'Failed to update competition details.' };
+  }
 
-  const apparatuses = [
-    'floor_exercise',
-    'vault',
-    'uneven_bars',
-    'balance_beam',
-    'pommel_horse',
-    'still_rings',
-    'parallel_bars',
-    'high_bar',
-  ];
-
-  for (const app of apparatuses) {
+  for (const app of APPARATUSES) {
     const rawValue = formData.get(app);
     const rawPlace = formData.get(`${app}_place`);
-    const rawStartValue = formData.get(`${app}_sv`);
+    const rawSV = formData.get(`${app}_sv`);
 
     const value = rawValue ? parseFloat(rawValue.toString()) : null;
     const place = rawPlace ? parseInt(rawPlace.toString()) : null;
-    const startValue = rawStartValue
-      ? parseFloat(rawStartValue.toString())
-      : null;
+    const startValue = rawSV ? parseFloat(rawSV.toString()) : null;
 
-    await supabase
+    // Skip empty apparatus
+    if (value === null && place === null && startValue === null) continue;
+
+    const { error: upsertError } = await supabase
       .from('scores')
-      .update({
-        value,
-        place,
-        start_value: startValue,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('competition_id', id)
-      .eq('apparatus', app);
+      .upsert(
+        {
+          competition_id: id,
+          apparatus: app,
+          value,
+          place,
+          start_value: startValue,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'competition_id,apparatus' }
+      );
+
+    if (upsertError) {
+      console.error('Error upserting score:', upsertError);
+      return { error: `Failed to update score for ${app}.` };
+    }
   }
 
   revalidatePath('/dashboard');
