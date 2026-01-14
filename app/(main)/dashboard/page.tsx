@@ -90,34 +90,26 @@ export default async function Dashboard() {
             <Card key={comp.id}>
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-xl font-bold">
-                    {comp.name}
-                  </CardTitle>
+                  <CardTitle className="text-xl font-bold">{comp.name}</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
                     {!comp.start_date ? (
                       <span className="italic">Date TBD</span>
                     ) : (
                       <>
-                        {new Date(comp.start_date).toLocaleDateString(
-                          undefined,
-                          {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          }
-                        )}
+                        {new Date(comp.start_date).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
                         {comp.end_date && comp.end_date !== comp.start_date && (
                           <>
                             {' '}
                             –{' '}
-                            {new Date(comp.end_date).toLocaleDateString(
-                              undefined,
-                              {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              }
-                            )}
+                            {new Date(comp.end_date).toLocaleDateString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
                           </>
                         )}
                       </>
@@ -129,6 +121,7 @@ export default async function Dashboard() {
                     )}
                   </p>
                 </div>
+
                 <div className="text-right flex flex-col items-end gap-2">
                   <CompetitionActions id={comp.id} name={comp.name} />
                   <div>
@@ -140,9 +133,21 @@ export default async function Dashboard() {
                         ? comp.all_around_score.toFixed(3)
                         : '0.000'}
                     </p>
+
+                    {/* ✅ NEW: All Around Place */}
+                    {comp.all_around_place !== null &&
+                    comp.all_around_place !== undefined ? (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Place:{' '}
+                        <span className="font-medium text-foreground">
+                          {comp.all_around_place}
+                        </span>
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               </CardHeader>
+
               <CardContent>
                 <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
                   {comp.scores?.map((score, index) => (
