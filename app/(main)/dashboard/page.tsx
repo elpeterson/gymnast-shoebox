@@ -30,7 +30,7 @@ type PRItem = {
   key: string;
   eventLabel: string;
   score: number;
-  place?: number | null;
+  place: number | null;
   date: string | null;
   meetName: string;
 };
@@ -85,110 +85,335 @@ function formatDateRange(start: string | null, end: string | null) {
       day: 'numeric',
       year: 'numeric',
     });
-    return `${startStr} – ${endStr}`;
+    return `${startStr} - ${endStr}`;
   }
 
   return startStr;
 }
 
-function competitionPrimaryDate(comp: Competition): string | null {
-  // Prefer start_date, fall back to end_date
+function formatSingleDate(date: string | null) {
+  if (!date) return 'Date TBD';
+  return new Date(date).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function getPrimaryDate(comp: Competition): string | null {
   return comp.start_date ?? comp.end_date ?? null;
 }
 
-function dateToSortValue(date: string | null): number {
-  if (!date) return Number.POSITIVE_INFINITY;
-  const t = new Date(date).getTime();
-  return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY;
-}
+export default async function Dashboard() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-function shouldReplacePR(current: PRItem | undefined, candidate: PRItem): boolean {
-  if (!current) return true;
+  if (!user) redirect('/login');
 
-  if (candidate.score > current.score) return true;
-  if (candidate.score < current.score) return false;
+  const activeGymnastId = await ensureActiveGymnast();
 
-  // Tie on score: pick earliest date (deterministic), otherwise keep existing
-  const candT = dateToSortValue(candidate.date);
-  const curT = dateToSortValue(current.date);
+  const { data: competitions, error } = await supabase
+    .from('competitions_with_scores')
+    .select('*')
+    .eq('gymnast_id', activeGymnastId)
+    .order('start_date', { ascending: false, nullsFirst: true })
+    .order('created_at', { ascending: false });
 
-  if (candT < curT) return true;
-  if (candT > curT) return false;
-
-  // Still tied: keep the one with "better" (lower) place if both exist
-  const candP = candidate.place ?? null;
-  const curP = current.place ?? null;
-  if (candP !== null && curP === null) return true;
-  if (candP === null && curP !== null) return false;
-  if (candP !== null && curP !== null && candP < curP) return true;
-
-  return false;
-}
-
-function buildPersonalRecords(competitions: Competition[]): PRItem[] {
-  const bestByKey = new Map<string, PRItem>();
-
-  for (const comp of competitions) {
-    const meetName = comp.name;
-    const date = competitionPrimaryDate(comp);
-
-    // Event PRs
-    for (const s of comp.scores ?? []) {
-      if (s.value === null || s.value === undefined) continue;
-
-      const key = s.apparatus;
-      const candidate: PRItem = {
-        key,
-        eventLabel: displayApparatus(s.apparatus),
-        score: s.value,
-        place: s.place ?? null,
-        date,
-        meetName,
-      };
-
-      const current = bestByKey.get(key);
-      if (shouldReplacePR(current, candidate)) bestByKey.set(key, candidate);
-    }
-
-    // All-Around PR
-    if (comp.all_around_score !== null && comp.all_around_score !== undefined) {
-      const key = 'all_around';
-      const candidate: PRItem = {
-        key,
-        eventLabel: 'All Around',
-        score: comp.all_around_score,
-        place: comp.all_around_place ?? null,
-        date,
-        meetName,
-      };
-
-      const current = bestByKey.get(key);
-      if (shouldReplacePR(current, candidate)) bestByKey.set(key, candidate);
-    }
+  if (error) {
+    console.error('Error fetching competitions:', error);
+    return <div className="p-8 text-red-500">Error loading scores.</div>;
   }
 
-  const preferredOrder = [
-    'vault',
-    'uneven_bars',
-    'balance_beam',
-    'floor_exercise',
-    'all_around',
-  ];
+  const hasCompetitions = competitions && competitions.length > 0;
 
-  const prs = Array.from(bestByKey.values());
+  // Build PRs from the fetched competitions
+  const personalRecords: PRItem[] = (() => {
+    if (!hasCompetitions) return [];
 
-  // Sort by preferred order first, then alphabetically
-  prs.sort((a, b) => {
-    const ai = preferredOrder.indexOf(a.key);
-    const bi = preferredOrder.indexOf(b.key);
-    const aRank = ai === -1 ? 999 : ai;
-    const bRank = bi === -1 ? 999 : bi;
-    if (aRank !== bRank) return aRank - bRank;
-    return a.eventLabel.localeCompare(b.eventLabel);
-  });
+    const best = new Map<string, PRItem>();
 
-  return prs;
+    const dateToSort = (d: string | null) => {
+      if (!d) return Number.POSITIVE_INFINITY;
+      const t = new Date(d).getTime();
+      return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY;
+    };
+
+    const shouldReplace = (cur: PRItem | undefined, cand: PRItem) => {
+      if (!cur) return true;
+
+      if (cand.score > cur.score) return true;
+      if (cand.score < cur.score) return false;
+
+      // tie on score -> earliest date wins
+      const ct = dateToSort(cur.date);
+      const nt = dateToSort(cand.date);
+      if (nt < ct) return true;
+      if (nt > ct) return false;
+
+      // still tied -> better (lower) place wins if both exist
+      if (cand.place !== null && cur.place === null) return true;
+      if (cand.place === null && cur.place !== null) return false;
+      if (cand.place !== null && cur.place !== null && cand.place < cur.place)
+        return true;
+
+      return false;
+    };
+
+    for (const comp of competitions as Competition[]) {
+      const meetName = comp.name;
+      const date = getPrimaryDate(comp);
+
+      // event PRs
+      for (const s of comp.scores ?? []) {
+        if (s.value === null || s.value === undefined) continue;
+
+        const key = s.apparatus;
+        const cand: PRItem = {
+          key,
+          eventLabel: displayApparatus(s.apparatus),
+          score: s.value,
+          place: s.place ?? null,
+          date,
+          meetName,
+        };
+
+        const cur = best.get(key);
+        if (shouldReplace(cur, cand)) best.set(key, cand);
+      }
+
+      // all around PR
+      if (comp.all_around_score !== null && comp.all_around_score !== undefined) {
+        const key = 'all_around';
+        const cand: PRItem = {
+          key,
+          eventLabel: 'All Around',
+          score: comp.all_around_score,
+          place: comp.all_around_place ?? null,
+          date,
+          meetName,
+        };
+
+        const cur = best.get(key);
+        if (shouldReplace(cur, cand)) best.set(key, cand);
+      }
+    }
+
+    const preferredOrder = [
+      'vault',
+      'uneven_bars',
+      'balance_beam',
+      'floor_exercise',
+      'all_around',
+    ];
+
+    const prs = Array.from(best.values());
+    prs.sort((a, b) => {
+      const ai = preferredOrder.indexOf(a.key);
+      const bi = preferredOrder.indexOf(b.key);
+      const ar = ai === -1 ? 999 : ai;
+      const br = bi === -1 ? 999 : bi;
+      if (ar !== br) return ar - br;
+      return a.eventLabel.localeCompare(b.eventLabel);
+    });
+
+    return prs;
+  })();
+
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto pb-10">
+      <BetaBanner />
+
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold tracking-tight">Score History</h2>
+        <div className="flex gap-3">
+          <Button asChild variant="outline">
+            <Link href="/import">
+              <CloudDownload className="mr-2 h-4 w-4" />
+              Import
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/scores/new">Add Score</Link>
+          </Button>
+        </div>
+      </div>
+
+      {!hasCompetitions ? (
+        <Card className="text-center py-10">
+          <CardHeader>
+            <CardTitle>No competitions yet</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-6">
+              Get started by recording your first competition result.
+            </p>
+            <Button asChild>
+              <Link href="/scores/new">Add Your First Score</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6">
+          {/* Personal Records */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xl font-bold">Personal Records</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {personalRecords.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No PRs yet. Add meet scores to start tracking personal bests.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  <div className="hidden sm:grid sm:grid-cols-12 text-xs uppercase text-muted-foreground px-2">
+                    <div className="col-span-3">Event</div>
+                    <div className="col-span-2">Score</div>
+                    <div className="col-span-2">Place</div>
+                    <div className="col-span-2">Date</div>
+                    <div className="col-span-3">Meet</div>
+                  </div>
+
+                  {personalRecords.map((pr) => {
+                    const hasPlace = pr.place !== null && pr.place !== undefined;
+
+                    return (
+                      <div
+                        key={pr.key}
+                        className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center rounded-lg border border-border/60 px-3 py-2"
+                      >
+                        <div className="sm:col-span-3">
+                          <span className="text-sm font-medium">{pr.eventLabel}</span>
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <span className="text-sm font-semibold">
+                            {pr.score.toFixed(3)}
+                          </span>
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          {hasPlace ? (
+                            <span
+                              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${placeBadgeClass(
+                                pr.place
+                              )}`}
+                              title="Place"
+                            >
+                              #{pr.place}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">-</span>
+                          )}
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <span className="text-sm text-muted-foreground">
+                            {formatSingleDate(pr.date)}
+                          </span>
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          <span className="text-sm">{pr.meetName}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Competitions */}
+          {(competitions as Competition[]).map((comp: Competition) => (
+            <Card key={comp.id}>
+              <CardHeader className="flex flex-row items-start justify-between pb-2">
+                <div>
+                  <CardTitle className="text-xl font-bold">{comp.name}</CardTitle>
+
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {comp.start_date ? (
+                      <>{formatDateRange(comp.start_date, comp.end_date)}</>
+                    ) : (
+                      <span className="italic">Date TBD</span>
+                    )}
+
+                    {comp.level && (
+                      <span className="ml-2 inline-flex items-center rounded-full bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary ring-1 ring-inset ring-secondary/20">
+                        {comp.level}
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-end gap-2">
+                  <CompetitionActions id={comp.id} name={comp.name} />
+
+                  <div className="text-right">
+                    <p className="text-xs uppercase text-muted-foreground">
+                      All Around
+                    </p>
+                    <div className="flex items-center gap-2 justify-end">
+                      <p className="text-2xl font-bold text-primary">
+                        {comp.all_around_score !== null
+                          ? comp.all_around_score.toFixed(3)
+                          : '0.000'}
+                      </p>
+
+                      {comp.all_around_place && (
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${placeBadgeClass(
+                            comp.all_around_place
+                          )}`}
+                          title="All-Around Place"
+                        >
+                          #{comp.all_around_place}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent>
+                <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
+                  {comp.scores?.map((score, index) => {
+                    const hasPlace =
+                      score.place !== null && score.place !== undefined;
+
+                    return (
+                      <div key={index} className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs font-medium text-muted-foreground uppercase">
+                            {displayApparatus(score.apparatus)}
+                          </p>
+
+                          {hasPlace && (
+                            <span
+                              className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${placeBadgeClass(
+                                score.place
+                              )}`}
+                              title="Event place"
+                            >
+                              #{score.place}
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-lg font-semibold">
+                          {score.value !== null ? score.value.toFixed(3) : '-'}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
-
-export default async function Dashboard() {
-  const
