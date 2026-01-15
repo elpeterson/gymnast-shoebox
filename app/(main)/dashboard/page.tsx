@@ -26,6 +26,15 @@ type Competition = {
   scores: ScoreItem[];
 };
 
+type PRItem = {
+  key: string;
+  eventLabel: string;
+  score: number;
+  place?: number | null;
+  date: string | null;
+  meetName: string;
+};
+
 /* ------------------------------
    Display helpers
 -------------------------------- */
@@ -61,177 +70,125 @@ function placeBadgeClass(place?: number | null) {
   return 'bg-muted text-muted-foreground';
 }
 
-export default async function Dashboard() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+function formatDateRange(start: string | null, end: string | null) {
+  if (!start) return null;
 
-  if (!user) redirect('/login');
+  const startStr = new Date(start).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
-  const activeGymnastId = await ensureActiveGymnast();
-
-  const { data: competitions, error } = await supabase
-    .from('competitions_with_scores')
-    .select('*')
-    .eq('gymnast_id', activeGymnastId)
-    .order('start_date', { ascending: false, nullsFirst: true })
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching competitions:', error);
-    return <div className="p-8 text-red-500">Error loading scores.</div>;
+  if (end && end !== start) {
+    const endStr = new Date(end).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    return `${startStr} – ${endStr}`;
   }
 
-  const hasCompetitions = competitions && competitions.length > 0;
-
-  return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-10">
-      <BetaBanner />
-
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Score History</h2>
-        <div className="flex gap-3">
-          <Button asChild variant="outline">
-            <Link href="/import">
-              <CloudDownload className="mr-2 h-4 w-4" />
-              Import
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/scores/new">Add Score</Link>
-          </Button>
-        </div>
-      </div>
-
-      {!hasCompetitions ? (
-        <Card className="text-center py-10">
-          <CardHeader>
-            <CardTitle>No competitions yet</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-6">
-              Get started by recording your first competition result.
-            </p>
-            <Button asChild>
-              <Link href="/scores/new">Add Your First Score</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-6">
-          {competitions.map((comp: Competition) => (
-            <Card key={comp.id}>
-              <CardHeader className="flex flex-row items-start justify-between pb-2">
-                <div>
-                  <CardTitle className="text-xl font-bold">
-                    {comp.name}
-                  </CardTitle>
-
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {comp.start_date ? (
-                      <>
-                        {new Date(comp.start_date).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                        {comp.end_date &&
-                          comp.end_date !== comp.start_date && (
-                            <>
-                              {' '}
-                              –{' '}
-                              {new Date(comp.end_date).toLocaleDateString(
-                                undefined,
-                                {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                }
-                              )}
-                            </>
-                          )}
-                      </>
-                    ) : (
-                      <span className="italic">Date TBD</span>
-                    )}
-
-                    {comp.level && (
-                      <span className="ml-2 inline-flex items-center rounded-full bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary ring-1 ring-inset ring-secondary/20">
-                        {comp.level}
-                      </span>
-                    )}
-                  </p>
-                </div>
-
-                <div className="flex flex-col items-end gap-2">
-                  <CompetitionActions id={comp.id} name={comp.name} />
-
-                  <div className="text-right">
-                    <p className="text-xs uppercase text-muted-foreground">
-                      All Around
-                    </p>
-                    <div className="flex items-center gap-2 justify-end">
-                      <p className="text-2xl font-bold text-primary">
-                        {comp.all_around_score !== null
-                          ? comp.all_around_score.toFixed(3)
-                          : '0.000'}
-                      </p>
-
-                      {comp.all_around_place && (
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${placeBadgeClass(
-                            comp.all_around_place
-                          )}`}
-                          title="All-Around Place"
-                        >
-                          #{comp.all_around_place}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent>
-                <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
-                  {comp.scores?.map((score, index) => {
-                    const hasPlace =
-                      score.place !== null && score.place !== undefined;
-
-                    return (
-                      <div key={index} className="space-y-1">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-xs font-medium text-muted-foreground uppercase">
-                            {displayApparatus(score.apparatus)}
-                          </p>
-
-                          {hasPlace && (
-                            <span
-                              className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${placeBadgeClass(
-                                score.place
-                              )}`}
-                              title="Event place"
-                            >
-                              #{score.place}
-                            </span>
-                          )}
-                        </div>
-
-                        <p className="text-lg font-semibold">
-                          {score.value !== null
-                            ? score.value.toFixed(3)
-                            : '-'}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  return startStr;
 }
+
+function competitionPrimaryDate(comp: Competition): string | null {
+  // Prefer start_date, fall back to end_date
+  return comp.start_date ?? comp.end_date ?? null;
+}
+
+function dateToSortValue(date: string | null): number {
+  if (!date) return Number.POSITIVE_INFINITY;
+  const t = new Date(date).getTime();
+  return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY;
+}
+
+function shouldReplacePR(current: PRItem | undefined, candidate: PRItem): boolean {
+  if (!current) return true;
+
+  if (candidate.score > current.score) return true;
+  if (candidate.score < current.score) return false;
+
+  // Tie on score: pick earliest date (deterministic), otherwise keep existing
+  const candT = dateToSortValue(candidate.date);
+  const curT = dateToSortValue(current.date);
+
+  if (candT < curT) return true;
+  if (candT > curT) return false;
+
+  // Still tied: keep the one with "better" (lower) place if both exist
+  const candP = candidate.place ?? null;
+  const curP = current.place ?? null;
+  if (candP !== null && curP === null) return true;
+  if (candP === null && curP !== null) return false;
+  if (candP !== null && curP !== null && candP < curP) return true;
+
+  return false;
+}
+
+function buildPersonalRecords(competitions: Competition[]): PRItem[] {
+  const bestByKey = new Map<string, PRItem>();
+
+  for (const comp of competitions) {
+    const meetName = comp.name;
+    const date = competitionPrimaryDate(comp);
+
+    // Event PRs
+    for (const s of comp.scores ?? []) {
+      if (s.value === null || s.value === undefined) continue;
+
+      const key = s.apparatus;
+      const candidate: PRItem = {
+        key,
+        eventLabel: displayApparatus(s.apparatus),
+        score: s.value,
+        place: s.place ?? null,
+        date,
+        meetName,
+      };
+
+      const current = bestByKey.get(key);
+      if (shouldReplacePR(current, candidate)) bestByKey.set(key, candidate);
+    }
+
+    // All-Around PR
+    if (comp.all_around_score !== null && comp.all_around_score !== undefined) {
+      const key = 'all_around';
+      const candidate: PRItem = {
+        key,
+        eventLabel: 'All Around',
+        score: comp.all_around_score,
+        place: comp.all_around_place ?? null,
+        date,
+        meetName,
+      };
+
+      const current = bestByKey.get(key);
+      if (shouldReplacePR(current, candidate)) bestByKey.set(key, candidate);
+    }
+  }
+
+  const preferredOrder = [
+    'vault',
+    'uneven_bars',
+    'balance_beam',
+    'floor_exercise',
+    'all_around',
+  ];
+
+  const prs = Array.from(bestByKey.values());
+
+  // Sort by preferred order first, then alphabetically
+  prs.sort((a, b) => {
+    const ai = preferredOrder.indexOf(a.key);
+    const bi = preferredOrder.indexOf(b.key);
+    const aRank = ai === -1 ? 999 : ai;
+    const bRank = bi === -1 ? 999 : bi;
+    if (aRank !== bRank) return aRank - bRank;
+    return a.eventLabel.localeCompare(b.eventLabel);
+  });
+
+  return prs;
+}
+
+export default async function Dashboard() {
+  const
