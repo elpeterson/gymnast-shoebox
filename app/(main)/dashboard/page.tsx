@@ -26,19 +26,9 @@ type Competition = {
   scores: ScoreItem[];
 };
 
-const APPARATUS_ORDER = [
-  // Women's (what you actually care about)
-  'vault',
-  'uneven_bars',
-  'balance_beam',
-  'floor_exercise',
-
-  // Men's (supported by the DB, might exist in data)
-  'pommel_horse',
-  'still_rings',
-  'parallel_bars',
-  'high_bar',
-] as const;
+/* ------------------------------
+   Display helpers
+-------------------------------- */
 
 function displayApparatus(app: string) {
   switch (app) {
@@ -50,40 +40,25 @@ function displayApparatus(app: string) {
       return 'Bars';
     case 'vault':
       return 'Vault';
-    case 'pommel_horse':
-      return 'Pommel';
-    case 'still_rings':
-      return 'Rings';
     case 'parallel_bars':
       return 'P Bars';
+    case 'still_rings':
+      return 'Rings';
+    case 'pommel_horse':
+      return 'Pommel';
     case 'high_bar':
       return 'High Bar';
     default:
-      return app.replaceAll('_', ' ');
+      return app.replace('_', ' ');
   }
 }
 
-function placeBadgeClass(place: number) {
-  // Tailwind-ish classes (no custom colors requested; using semantic-ish defaults)
-  // 1/2/3 get “medal” treatment; others stay muted.
-  if (place === 1) return 'bg-yellow-500/15 text-yellow-300 ring-1 ring-yellow-500/25';
-  if (place === 2) return 'bg-slate-500/15 text-slate-200 ring-1 ring-slate-500/25';
-  if (place === 3) return 'bg-amber-600/15 text-amber-200 ring-1 ring-amber-600/25';
-  return 'bg-muted/40 text-muted-foreground ring-1 ring-inset ring-muted/40';
-}
-
-function sortScores(scores: ScoreItem[] | undefined) {
-  const safe = scores ?? [];
-  const rank = new Map<string, number>();
-  APPARATUS_ORDER.forEach((a, i) => rank.set(a, i));
-
-  return [...safe].sort((a, b) => {
-    const ra = rank.has(a.apparatus) ? (rank.get(a.apparatus) as number) : 999;
-    const rb = rank.has(b.apparatus) ? (rank.get(b.apparatus) as number) : 999;
-
-    if (ra !== rb) return ra - rb;
-    return a.apparatus.localeCompare(b.apparatus);
-  });
+function placeBadgeClass(place?: number | null) {
+  if (!place) return 'bg-muted text-muted-foreground';
+  if (place === 1) return 'bg-yellow-500/20 text-yellow-500';
+  if (place === 2) return 'bg-gray-400/20 text-gray-300';
+  if (place === 3) return 'bg-amber-700/20 text-amber-400';
+  return 'bg-muted text-muted-foreground';
 }
 
 export default async function Dashboard() {
@@ -145,114 +120,116 @@ export default async function Dashboard() {
         </Card>
       ) : (
         <div className="grid gap-6">
-          {competitions.map((comp: Competition) => {
-            const sortedScores = sortScores(comp.scores);
+          {competitions.map((comp: Competition) => (
+            <Card key={comp.id}>
+              <CardHeader className="flex flex-row items-start justify-between pb-2">
+                <div>
+                  <CardTitle className="text-xl font-bold">
+                    {comp.name}
+                  </CardTitle>
 
-            return (
-              <Card key={comp.id}>
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                  <div>
-                    <CardTitle className="text-xl font-bold">{comp.name}</CardTitle>
-
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {!comp.start_date ? (
-                        <span className="italic">Date TBD</span>
-                      ) : (
-                        <>
-                          {new Date(comp.start_date).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                          {comp.end_date && comp.end_date !== comp.start_date && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {comp.start_date ? (
+                      <>
+                        {new Date(comp.start_date).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                        {comp.end_date &&
+                          comp.end_date !== comp.start_date && (
                             <>
                               {' '}
                               –{' '}
-                              {new Date(comp.end_date).toLocaleDateString(undefined, {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              })}
+                              {new Date(comp.end_date).toLocaleDateString(
+                                undefined,
+                                {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                }
+                              )}
                             </>
                           )}
-                        </>
-                      )}
+                      </>
+                    ) : (
+                      <span className="italic">Date TBD</span>
+                    )}
 
-                      {comp.level && (
-                        <span className="ml-2 inline-flex items-center rounded-full bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary ring-1 ring-inset ring-secondary/20">
-                          {comp.level}
-                        </span>
-                      )}
+                    {comp.level && (
+                      <span className="ml-2 inline-flex items-center rounded-full bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary ring-1 ring-inset ring-secondary/20">
+                        {comp.level}
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-end gap-2">
+                  <CompetitionActions id={comp.id} name={comp.name} />
+
+                  <div className="text-right">
+                    <p className="text-xs uppercase text-muted-foreground">
+                      All Around
                     </p>
-                  </div>
-
-                  <div className="text-right flex flex-col items-end gap-2">
-                    <CompetitionActions id={comp.id} name={comp.name} />
-
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-muted-foreground uppercase">
-                        All Around
+                    <div className="flex items-center gap-2 justify-end">
+                      <p className="text-2xl font-bold text-primary">
+                        {comp.all_around_score !== null
+                          ? comp.all_around_score.toFixed(3)
+                          : '0.000'}
                       </p>
 
-                      <div className="flex items-baseline gap-2 justify-end">
-                        <p className="text-2xl font-bold text-primary">
-                          {comp.all_around_score !== null
-                            ? comp.all_around_score.toFixed(3)
-                            : '0.000'}
-                        </p>
-
-                        {comp.all_around_place !== null &&
-                          comp.all_around_place !== undefined && (
-                            <span
-                              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${placeBadgeClass(
-                                comp.all_around_place
-                              )}`}
-                              title="All Around Place"
-                            >
-                              #{comp.all_around_place}
-                            </span>
-                          )}
-                      </div>
+                      {comp.all_around_place && (
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${placeBadgeClass(
+                            comp.all_around_place
+                          )}`}
+                          title="All-Around Place"
+                        >
+                          #{comp.all_around_place}
+                        </span>
+                      )}
                     </div>
                   </div>
-                </CardHeader>
+                </div>
+              </CardHeader>
 
-                <CardContent>
-                  <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
-                    {sortedScores.map((score, index) => {
-                      const hasPlace =
-                        score.place !== null && score.place !== undefined;
+              <CardContent>
+                <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
+                  {comp.scores?.map((score, index) => {
+                    const hasPlace =
+                      score.place !== null && score.place !== undefined;
 
-                      return (
-                        <div key={index} className="space-y-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs font-medium text-muted-foreground uppercase">
-                              {displayApparatus(score.apparatus)}
-                            </p>
-
-                            {hasPlace && (
-                              <span
-                                className={`shrink-0 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${placeBadgeClass(
-                                  score.place as number
-                                )}`}
-                                title="Event place"
-                              >
-                                #{score.place}
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="text-lg font-semibold">
-                            {score.value !== null ? score.value.toFixed(3) : '-'}
+                    return (
+                      <div key={index} className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs font-medium text-muted-foreground uppercase">
+                            {displayApparatus(score.apparatus)}
                           </p>
+
+                          {hasPlace && (
+                            <span
+                              className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${placeBadgeClass(
+                                score.place
+                              )}`}
+                              title="Event place"
+                            >
+                              #{score.place}
+                            </span>
+                          )}
                         </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+
+                        <p className="text-lg font-semibold">
+                          {score.value !== null
+                            ? score.value.toFixed(3)
+                            : '-'}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
     </div>
