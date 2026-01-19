@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { createScore, updateCompetition } from '@/app/(main)/scores/actions';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { MAG_APPARATUS, WAG_APPARATUS } from '@/lib/constants';
 
 interface CompetitionFormProps {
   initialData?: {
@@ -31,9 +32,13 @@ interface CompetitionFormProps {
       start_value: number | null;
     }[];
   };
+  discipline?: string;
 }
 
-export function CompetitionForm({ initialData }: CompetitionFormProps) {
+export function CompetitionForm({
+  initialData,
+  discipline = 'MAG',
+}: CompetitionFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const isEditing = !!initialData;
@@ -67,15 +72,17 @@ export function CompetitionForm({ initialData }: CompetitionFormProps) {
     });
   };
 
-const getScore = (app: string) =>
-  (initialData?.scores || []).find((s) => s.apparatus === app)?.value ?? '';
+  const getScore = (app: string) =>
+    (initialData?.scores || []).find((s) => s.apparatus === app)?.value ?? '';
 
-const getPlace = (app: string) =>
-  (initialData?.scores || []).find((s) => s.apparatus === app)?.place ?? '';
+  const getPlace = (app: string) =>
+    (initialData?.scores || []).find((s) => s.apparatus === app)?.place ?? '';
 
-const getSV = (app: string) =>
-  (initialData?.scores || []).find((s) => s.apparatus === app)?.start_value ??
-  '';
+  const getSV = (app: string) =>
+    (initialData?.scores || []).find((s) => s.apparatus === app)?.start_value ??
+    '';
+
+  const apparatusList = discipline === 'WAG' ? WAG_APPARATUS : MAG_APPARATUS;
 
   return (
     <Card>
@@ -91,6 +98,8 @@ const getSV = (app: string) =>
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-8">
+          <input type="hidden" name="discipline" value={discipline} />
+
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="name">Competition Name</Label>
@@ -149,10 +158,9 @@ const getSV = (app: string) =>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium leading-none">
-                Apparatus Scores
+                Apparatus Scores ({discipline === 'WAG' ? "Women's" : "Men's"})
               </h3>
 
-              {/* TOGGLES */}
               <div className="flex gap-4">
                 <div className="flex items-center space-x-2">
                   <Switch
@@ -178,60 +186,18 @@ const getSV = (app: string) =>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <ScoreInput
-                label="Floor Exercise"
-                name="floor_exercise"
-                initVal={getScore('floor_exercise')}
-                initPlace={getPlace('floor_exercise')}
-                initSV={getSV('floor_exercise')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
-              <ScoreInput
-                label="Pommel Horse"
-                name="pommel_horse"
-                initVal={getScore('pommel_horse')}
-                initPlace={getPlace('pommel_horse')}
-                initSV={getSV('pommel_horse')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
-              <ScoreInput
-                label="Still Rings"
-                name="still_rings"
-                initVal={getScore('still_rings')}
-                initPlace={getPlace('still_rings')}
-                initSV={getSV('still_rings')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
-              <ScoreInput
-                label="Vault"
-                name="vault"
-                initVal={getScore('vault')}
-                initPlace={getPlace('vault')}
-                initSV={getSV('vault')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
-              <ScoreInput
-                label="Parallel Bars"
-                name="parallel_bars"
-                initVal={getScore('parallel_bars')}
-                initPlace={getPlace('parallel_bars')}
-                initSV={getSV('parallel_bars')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
-              <ScoreInput
-                label="High Bar"
-                name="high_bar"
-                initVal={getScore('high_bar')}
-                initPlace={getPlace('high_bar')}
-                initSV={getSV('high_bar')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
+              {apparatusList.map((app) => (
+                <ScoreInput
+                  key={app.id}
+                  label={app.label}
+                  name={app.id}
+                  initVal={getScore(app.id)}
+                  initPlace={getPlace(app.id)}
+                  initSV={getSV(app.id)}
+                  showSV={showSV}
+                  showPlace={showPlace}
+                />
+              ))}
             </div>
           </div>
 
@@ -264,9 +230,9 @@ function ScoreInput({
 }: {
   label: string;
   name: string;
-  initVal: any;
-  initPlace: any;
-  initSV: any;
+  initVal: number | string;
+  initPlace: number | string;
+  initSV: number | string;
   showSV: boolean;
   showPlace: boolean;
 }) {

@@ -61,6 +61,8 @@ export async function createGymnast(formData: FormData) {
   if (!user) return { error: 'Not authenticated' };
 
   const name = formData.get('name') as string;
+  const discipline = formData.get('discipline') as string;
+
   if (!name) return { error: 'Name is required' };
 
   const { data, error } = await supabase
@@ -68,7 +70,7 @@ export async function createGymnast(formData: FormData) {
     .insert({
       user_id: user.id,
       name: name,
-      gender: 'male',
+      discipline: discipline || 'MAG',
     })
     .select()
     .single();
@@ -92,6 +94,7 @@ export async function updateGymnast(id: string, formData: FormData) {
 
   const name = formData.get('name') as string;
   const mso_id = formData.get('mso_id') as string;
+  const discipline = formData.get('discipline') as string;
 
   if (!name) return { error: 'Name is required' };
 
@@ -100,6 +103,7 @@ export async function updateGymnast(id: string, formData: FormData) {
     .update({
       name,
       mso_id: mso_id || null,
+      discipline: discipline,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)

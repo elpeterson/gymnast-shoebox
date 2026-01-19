@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { ensureActiveGymnast } from '@/app/actions/gymnast';
+import { MAG_APPARATUS, WAG_APPARATUS } from '@/lib/constants';
 
 export async function createScore(formData: FormData) {
   const supabase = await createClient();
@@ -20,20 +21,17 @@ export async function createScore(formData: FormData) {
 
   const name = formData.get('name') as string;
   const level = formData.get('level') as string | null;
+  const discipline = formData.get('discipline') as string;
 
   const rawStartDate = formData.get('start_date') as string;
   const rawEndDate = formData.get('end_date') as string;
   const startDate = rawStartDate ? rawStartDate : null;
   const endDate = rawEndDate ? rawEndDate : null;
 
-  const apparatuses = [
-    'floor_exercise',
-    'pommel_horse',
-    'still_rings',
-    'vault',
-    'parallel_bars',
-    'high_bar',
-  ];
+  const apparatusList =
+    discipline === 'WAG'
+      ? WAG_APPARATUS.map((a) => a.id)
+      : MAG_APPARATUS.map((a) => a.id);
 
   const { data: competition, error: compError } = await supabase
     .from('competitions')
@@ -53,7 +51,7 @@ export async function createScore(formData: FormData) {
     return { error: 'Failed to create competition record.' };
   }
 
-  const scoreInserts = apparatuses.map((app) => {
+  const scoreInserts = apparatusList.map((app) => {
     const rawValue = formData.get(app);
     const rawPlace = formData.get(`${app}_place`);
     const rawStartValue = formData.get(`${app}_sv`);
@@ -102,6 +100,8 @@ export async function updateCompetition(id: string, formData: FormData) {
 
   const name = formData.get('name') as string;
   const level = formData.get('level') as string | null;
+  const discipline = formData.get('discipline') as string;
+
   const rawStartDate = formData.get('start_date') as string;
   const rawEndDate = formData.get('end_date') as string;
   const startDate = rawStartDate ? rawStartDate : null;
@@ -121,16 +121,12 @@ export async function updateCompetition(id: string, formData: FormData) {
 
   if (compError) return { error: 'Failed to update competition details.' };
 
-  const apparatuses = [
-    'floor_exercise',
-    'pommel_horse',
-    'still_rings',
-    'vault',
-    'parallel_bars',
-    'high_bar',
-  ];
+  const apparatusList =
+    discipline === 'WAG'
+      ? WAG_APPARATUS.map((a) => a.id)
+      : MAG_APPARATUS.map((a) => a.id);
 
-  for (const app of apparatuses) {
+  for (const app of apparatusList) {
     const rawValue = formData.get(app);
     const rawPlace = formData.get(`${app}_place`);
     const rawStartValue = formData.get(`${app}_sv`);
@@ -141,16 +137,19 @@ export async function updateCompetition(id: string, formData: FormData) {
       ? parseFloat(rawStartValue.toString())
       : null;
 
-    await supabase
-      .from('scores')
-      .update({
+    const { error } = await supabase.from('scores').upsert(
+      {
+        competition_id: id,
+        apparatus: app,
         value,
         place,
         start_value: startValue,
         updated_at: new Date().toISOString(),
-      })
-      .eq('competition_id', id)
-      .eq('apparatus', app);
+      },
+      { onConflict: 'competition_id, apparatus' }
+    );
+
+    if (error) console.error('Error updating score', error);
   }
 
   revalidatePath('/dashboard');

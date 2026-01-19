@@ -7,11 +7,13 @@ import { CompetitionActions } from '@/components/competition-actions';
 import { BetaBanner } from '@/components/beta-banner';
 import { ensureActiveGymnast } from '@/app/actions/gymnast';
 import { CloudDownload } from 'lucide-react';
+import { MAG_APPARATUS, WAG_APPARATUS } from '@/lib/constants';
 
 type ScoreItem = {
   apparatus: string;
   value: number | null;
   place?: number | null;
+  start_value?: number | null;
 };
 
 type Competition = {
@@ -38,11 +40,20 @@ export default async function Dashboard() {
 
   const activeGymnastId = await ensureActiveGymnast();
 
+  const { data: gymnast } = await supabase
+    .from('gymnasts')
+    .select('discipline')
+    .eq('id', activeGymnastId)
+    .single();
+
+  const discipline = gymnast?.discipline || 'MAG';
+  const apparatusConfig = discipline === 'WAG' ? WAG_APPARATUS : MAG_APPARATUS;
+
   const { data: competitions, error } = await supabase
     .from('competitions_with_scores')
     .select('*')
     .eq('gymnast_id', activeGymnastId)
-    .order('start_date', { ascending: false, nullsFirst: true }) // TODO: maybe make dates required if this is a problem
+    .order('start_date', { ascending: false, nullsFirst: true })
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -79,9 +90,17 @@ export default async function Dashboard() {
             <p className="text-muted-foreground mb-6">
               Get started by recording your first competition result.
             </p>
-            <Button asChild>
-              <Link href="/scores/new">Add Your First Score</Link>
-            </Button>
+            <div className="flex justify-center gap-3">
+              <Button asChild variant="outline">
+                <Link href="/import">
+                  <CloudDownload className="mr-2 h-4 w-4" />
+                  Import from MSO
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href="/scores/new">Add Your First Score</Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -135,31 +154,56 @@ export default async function Dashboard() {
                     <p className="text-sm font-medium text-muted-foreground uppercase">
                       All Around
                     </p>
-                    <p className="text-2xl font-bold text-primary">
-                      {comp.all_around_score !== null
-                        ? comp.all_around_score.toFixed(3)
-                        : '0.000'}
-                    </p>
+                    <div className="flex items-baseline justify-end gap-2">
+                      <p className="text-2xl font-bold text-primary">
+                        {comp.all_around_score !== null
+                          ? comp.all_around_score.toFixed(3)
+                          : '0.000'}
+                      </p>
+                      {comp.all_around_place && (
+                        <span className="text-sm font-semibold text-muted-foreground">
+                          ({comp.all_around_place})
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
-                  {comp.scores?.map((score, index) => (
-                    <div key={index} className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground uppercase truncate">
-                        {score.apparatus.replace('_', ' ')}
-                        {score.place && (
-                          <span className="ml-1 text-[10px] text-muted-foreground/70">
-                            ({score.place})
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-lg font-semibold">
-                        {score.value !== null ? score.value.toFixed(3) : '-'}
-                      </p>
-                    </div>
-                  ))}
+                  {apparatusConfig.map((appConfig) => {
+                    const score = comp.scores.find(
+                      (s) => s.apparatus === appConfig.id
+                    );
+
+                    return (
+                      <div key={appConfig.id} className="space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase truncate">
+                          {appConfig.label}
+                          {score?.place && (
+                            <span className="ml-1 text-[10px] text-muted-foreground/70">
+                              ({score.place})
+                            </span>
+                          )}
+                        </p>
+                        <div className="flex items-baseline gap-2">
+                          {score?.start_value && (
+                            <span
+                              className="text-xs text-muted-foreground/60"
+                              title="Start Value"
+                            >
+                              SV:{score.start_value.toFixed(1)}
+                            </span>
+                          )}
+                          <p className="text-lg font-semibold">
+                            {score?.value !== null && score?.value !== undefined
+                              ? score.value.toFixed(3)
+                              : '-'}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>

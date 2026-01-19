@@ -27,6 +27,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { setActiveGymnast, createGymnast } from '@/app/actions/gymnast';
@@ -128,7 +135,6 @@ export function GymnastSwitcher({
         </PopoverContent>
       </Popover>
 
-      {/* Create Dialog Content */}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Gymnast Profile</DialogTitle>
@@ -146,6 +152,19 @@ export function GymnastSwitcher({
                 placeholder="e.g. Michael"
                 required
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="discipline">Discipline</Label>
+              <Select name="discipline" defaultValue="MAG">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select discipline" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MAG">Men&apos;s (MAG)</SelectItem>
+                  <SelectItem value="WAG">Women&apos;s (WAG)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

@@ -11,6 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Pencil, Trash2, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateGymnast, deleteGymnast } from '@/app/actions/gymnast';
@@ -39,6 +46,7 @@ type Gymnast = {
   id: string;
   name: string;
   mso_id?: string | null;
+  discipline: string;
 };
 
 export function GymnastList({ gymnasts }: { gymnasts: Gymnast[] }) {
@@ -94,11 +102,10 @@ function GymnastRow({ gymnast }: { gymnast: Gymnast }) {
         </div>
         <div className="flex flex-col">
           <span className="font-medium">{gymnast.name}</span>
-          {gymnast.mso_id && (
-            <span className="text-[10px] text-muted-foreground">
-              MSO: {gymnast.mso_id}
-            </span>
-          )}
+          <span className="text-[10px] text-muted-foreground">
+            {gymnast.discipline === 'WAG' ? "Women's" : "Men's"}
+            {gymnast.mso_id && ` • MSO: ${gymnast.mso_id}`}
+          </span>
         </div>
       </div>
 
@@ -130,6 +137,22 @@ function GymnastRow({ gymnast }: { gymnast: Gymnast }) {
                     defaultValue={gymnast.name}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="discipline">Discipline</Label>
+                  <Select
+                    name="discipline"
+                    defaultValue={gymnast.discipline || 'MAG'}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select discipline" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MAG">Men&apos;s (MAG)</SelectItem>
+                      <SelectItem value="WAG">Women&apos;s (WAG)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

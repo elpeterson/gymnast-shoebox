@@ -11,7 +11,7 @@ export default async function AccountPage() {
 
   const { data: gymnasts } = await supabase
     .from('gymnasts')
-    .select('id, name, mso_id')
+    .select('id, name, mso_id, discipline')
     .eq('user_id', user?.id)
     .order('created_at', { ascending: true });
 
