@@ -2,7 +2,7 @@ name: Supabase Heartbeat
 
 on:
   schedule:
-    # Monday and Friday, 9am UTC
+    # Monday and Friday at 09:00 UTC
     - cron: "0 9 * * 1,5"
   workflow_dispatch:
 
@@ -15,7 +15,9 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          curl -sS -o /dev/null -w "%{http_code}\n" \
+          echo "SUPABASE_URL=[$SUPABASE_URL]"
+          echo "HIT=[$SUPABASE_URL/rest/v1/competitions?select=id&limit=1]"
+          curl -sS -v \
             "$SUPABASE_URL/rest/v1/competitions?select=id&limit=1" \
             -H "apikey: $SUPABASE_ANON_KEY" \
             -H "Authorization: Bearer $SUPABASE_ANON_KEY"
