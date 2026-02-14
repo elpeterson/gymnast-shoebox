@@ -23,6 +23,9 @@ export async function createScore(formData: FormData) {
   const level = formData.get('level') as string | null;
   const discipline = formData.get('discipline') as string;
 
+  const rawAAPlace = formData.get('all_around_place');
+  const allAroundPlace = rawAAPlace ? parseInt(rawAAPlace.toString()) : null;
+
   const rawStartDate = formData.get('start_date') as string;
   const rawEndDate = formData.get('end_date') as string;
   const startDate = rawStartDate ? rawStartDate : null;
@@ -42,6 +45,7 @@ export async function createScore(formData: FormData) {
       start_date: startDate,
       end_date: endDate,
       level: level,
+      all_around_place: allAroundPlace,
     })
     .select()
     .single();
@@ -102,6 +106,9 @@ export async function updateCompetition(id: string, formData: FormData) {
   const level = formData.get('level') as string | null;
   const discipline = formData.get('discipline') as string;
 
+  const rawAAPlace = formData.get('all_around_place');
+  const allAroundPlace = rawAAPlace ? parseInt(rawAAPlace.toString()) : null;
+
   const rawStartDate = formData.get('start_date') as string;
   const rawEndDate = formData.get('end_date') as string;
   const startDate = rawStartDate ? rawStartDate : null;
@@ -114,6 +121,7 @@ export async function updateCompetition(id: string, formData: FormData) {
       start_date: startDate,
       end_date: endDate,
       level,
+      all_around_place: allAroundPlace,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)

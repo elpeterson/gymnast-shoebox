@@ -25,6 +25,7 @@ interface CompetitionFormProps {
     start_date: string | null;
     end_date: string | null;
     level: string | null;
+    all_around_place: number | null;
     scores: {
       apparatus: string;
       value: number | null;
@@ -122,6 +123,20 @@ export function CompetitionForm({
                 defaultValue={initialData?.level || ''}
               />
             </div>
+
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="all_around_place">AA Place (Optional)</Label>
+              <Input
+                type="number"
+                name="all_around_place"
+                id="all_around_place"
+                min="1"
+                placeholder="#"
+                className="no-spinners"
+                onWheel={(e) => e.currentTarget.blur()}
+                defaultValue={initialData?.all_around_place || ''}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -209,8 +224,8 @@ export function CompetitionForm({
               {isPending
                 ? 'Saving...'
                 : isEditing
-                ? 'Update Scores'
-                : 'Save Scores'}
+                  ? 'Update Scores'
+                  : 'Save Scores'}
             </Button>
           </div>
         </form>
