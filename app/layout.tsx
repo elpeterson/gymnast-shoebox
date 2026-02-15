@@ -4,6 +4,8 @@ import { Toaster } from '@/components/ui/sonner';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from '@/components/theme-provider';
+import { getUserSettings } from '@/app/actions/settings';
+import { ThemeSync } from '@/components/theme-sync';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -12,11 +14,13 @@ export const metadata = {
   description: 'Track your gymnastics scores',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getUserSettings();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
@@ -26,7 +30,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main className="min-h-screen bg-gray-50">{children}</main>
+          <ThemeSync serverTheme={settings.theme} />
+
+          <main className="min-h-screen bg-background text-foreground">
+            {children}
+          </main>
+
           <Toaster />
           <Analytics />
           <SpeedInsights />

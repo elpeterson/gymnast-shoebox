@@ -26,6 +26,8 @@ interface CompetitionFormProps {
     end_date: string | null;
     level: string | null;
     all_around_place: number | null;
+    show_start_value: boolean;
+    show_place: boolean;
     scores: {
       apparatus: string;
       value: number | null;
@@ -44,8 +46,8 @@ export function CompetitionForm({
   const router = useRouter();
   const isEditing = !!initialData;
 
-  const [showSV, setShowSV] = useState(false);
-  const [showPlace, setShowPlace] = useState(true);
+  const [showSV, setShowSV] = useState(initialData?.show_start_value ?? false);
+  const [showPlace, setShowPlace] = useState(initialData?.show_place ?? true);
 
   const handleSubmit = async (formData: FormData) => {
     startTransition(async () => {
@@ -62,7 +64,7 @@ export function CompetitionForm({
           toast.error('Operation Failed', { description: result.error });
         } else {
           toast.success(
-            isEditing ? 'Competition Updated' : 'Competition Created'
+            isEditing ? 'Competition Updated' : 'Competition Created',
           );
           router.push('/dashboard');
           router.refresh();
@@ -101,8 +103,11 @@ export function CompetitionForm({
         <form action={handleSubmit} className="space-y-8">
           <input type="hidden" name="discipline" value={discipline} />
 
+          <input type="hidden" name="show_start_value" value={String(showSV)} />
+          <input type="hidden" name="show_place" value={String(showPlace)} />
+
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div className="grid w-full items-center gap-1.5">
+            <div className="grid w-full items-center gap-1.5 sm:col-span-2">
               <Label htmlFor="name">Competition Name</Label>
               <Input
                 type="text"
@@ -113,6 +118,7 @@ export function CompetitionForm({
                 defaultValue={initialData?.name}
               />
             </div>
+
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="level">Level (Optional)</Label>
               <Input
@@ -245,9 +251,9 @@ function ScoreInput({
 }: {
   label: string;
   name: string;
-  initVal: number | string;
-  initPlace: number | string;
-  initSV: number | string;
+  initVal: any;
+  initPlace: any;
+  initSV: any;
   showSV: boolean;
   showPlace: boolean;
 }) {
@@ -300,7 +306,7 @@ function ScoreInput({
         <div
           className={cn(
             'grid w-1/3 items-center gap-1.5',
-            !showPlace && 'hidden'
+            !showPlace && 'hidden',
           )}
         >
           <Label

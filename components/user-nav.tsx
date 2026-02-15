@@ -1,6 +1,6 @@
 'use client';
 
-import { updateThemePreference } from '@/app/(main)/account/actions';
+import { updateSetting } from '@/app/actions/settings';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { User, Settings, LogOut, Moon, Sun, Laptop } from 'lucide-react';
+import { User, LogOut, Moon, Sun, Laptop } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 
@@ -37,8 +37,9 @@ export function UserNav({ email }: { email: string | undefined }) {
 
   const handleThemeChange = async (theme: string) => {
     setTheme(theme);
-    await updateThemePreference(theme);
-  };
+    // Updates the centralized settings table
+    await updateSetting('theme', theme);
+  };;
 
   return (
     <DropdownMenu>

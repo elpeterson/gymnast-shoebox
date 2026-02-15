@@ -20,9 +20,18 @@ export default async function EditCompetitionPage({
     redirect('/dashboard');
   }
 
+  const { data: gymnast } = await supabase
+    .from('gymnasts')
+    .select('discipline')
+    .eq('id', competition.gymnast_id)
+    .single();
+
   return (
     <div className="max-w-2xl mx-auto py-10">
-      <CompetitionForm initialData={competition} />
+      <CompetitionForm
+        initialData={competition}
+        discipline={gymnast?.discipline || 'MAG'}
+      />
     </div>
   );
 }

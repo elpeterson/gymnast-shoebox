@@ -23,6 +23,9 @@ export async function createScore(formData: FormData) {
   const level = formData.get('level') as string | null;
   const discipline = formData.get('discipline') as string;
 
+  const showStartValue = formData.get('show_start_value') === 'true';
+  const showPlace = formData.get('show_place') === 'true';
+
   const rawAAPlace = formData.get('all_around_place');
   const allAroundPlace = rawAAPlace ? parseInt(rawAAPlace.toString()) : null;
 
@@ -46,6 +49,8 @@ export async function createScore(formData: FormData) {
       end_date: endDate,
       level: level,
       all_around_place: allAroundPlace,
+      show_start_value: showStartValue,
+      show_place: showPlace,
     })
     .select()
     .single();
@@ -106,6 +111,9 @@ export async function updateCompetition(id: string, formData: FormData) {
   const level = formData.get('level') as string | null;
   const discipline = formData.get('discipline') as string;
 
+  const showStartValue = formData.get('show_start_value') === 'true';
+  const showPlace = formData.get('show_place') === 'true';
+
   const rawAAPlace = formData.get('all_around_place');
   const allAroundPlace = rawAAPlace ? parseInt(rawAAPlace.toString()) : null;
 
@@ -122,6 +130,8 @@ export async function updateCompetition(id: string, formData: FormData) {
       end_date: endDate,
       level,
       all_around_place: allAroundPlace,
+      show_start_value: showStartValue,
+      show_place: showPlace,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
@@ -154,7 +164,7 @@ export async function updateCompetition(id: string, formData: FormData) {
         start_value: startValue,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: 'competition_id, apparatus' }
+      { onConflict: 'competition_id, apparatus' },
     );
 
     if (error) console.error('Error updating score', error);
