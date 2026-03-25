@@ -251,9 +251,9 @@ function ScoreInput({
 }: {
   label: string;
   name: string;
-  initVal: any;
-  initPlace: any;
-  initSV: any;
+  initVal: string | number;
+  initPlace: string | number;
+  initSV: string | number;
   showSV: boolean;
   showPlace: boolean;
 }) {

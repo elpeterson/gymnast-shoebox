@@ -35,7 +35,6 @@ export default async function Dashboard() {
     .range(0, COMPETITIONS_PAGE_SIZE - 1);
 
   if (error) {
-    console.error('Error fetching competitions:', error);
     return <div className="p-8 text-red-500">Error loading scores.</div>;
   }
 

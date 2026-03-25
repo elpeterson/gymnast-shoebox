@@ -41,7 +41,7 @@ export async function updateSetting(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return;
+  if (!user) return { error: 'Not authenticated' };
 
   const { error } = await supabase.from('user_settings').upsert(
     {
@@ -52,10 +52,8 @@ export async function updateSetting(
     { onConflict: 'user_id' },
   );
 
-  if (error) {
-    console.error('Error updating setting:', error);
-    return { error: error.message };
-  }
+  if (error) return { error: error.message };
 
   revalidatePath('/', 'layout');
+  return { success: true };
 }

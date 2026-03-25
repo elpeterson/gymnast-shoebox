@@ -107,8 +107,7 @@ export async function fetchMsoMeets(msoId: string) {
     }));
 
     return { success: true, meets: processedMeets };
-  } catch (e) {
-    console.error(e);
+  } catch {
     return { error: 'Error parsing MSO data' };
   }
 }
@@ -139,7 +138,7 @@ export async function importMsoMeet(meet: MsoMeetSummary) {
     const realDateStr =
       $('#MeetDetails h5 strong').first().text().trim() || meet.dateStr;
 
-    const scoresToInsert: any[] = [];
+    const scoresToInsert: { apparatus: string; value: number; place: number | null }[] = [];
     let allAroundPlace: number | null = null;
 
     $('#athlete table tbody tr').each((i, row) => {
@@ -179,8 +178,8 @@ export async function importMsoMeet(meet: MsoMeetSummary) {
         startDate = new Date(cleanDateStr).toISOString();
         endDate = startDate;
       }
-    } catch (e) {
-      console.log('Date parsing skipped for:', realDateStr);
+    } catch {
+      // date parsing is best-effort; null dates are acceptable
     }
 
     const { data: comp, error: compError } = await supabase
@@ -220,8 +219,7 @@ export async function importMsoMeet(meet: MsoMeetSummary) {
 
     revalidatePath('/dashboard');
     return { success: true };
-  } catch (e) {
-    console.error(e);
+  } catch {
     return { error: 'Failed to import meet' };
   }
 }

@@ -55,10 +55,7 @@ export async function createScore(formData: FormData) {
     .select()
     .single();
 
-  if (compError) {
-    console.error('Error creating competition:', compError);
-    return { error: 'Failed to create competition record.' };
-  }
+  if (compError) return { error: 'Failed to create competition record.' };
 
   const scoreInserts = apparatusList.map((app) => {
     const rawValue = formData.get(app);
@@ -78,10 +75,7 @@ export async function createScore(formData: FormData) {
     .from('scores')
     .insert(scoreInserts);
 
-  if (scoreError) {
-    console.error('Error saving scores:', scoreError);
-    return { error: 'Failed to save apparatus scores.' };
-  }
+  if (scoreError) return { error: 'Failed to save apparatus scores.' };
 
   revalidatePath('/dashboard');
   return { success: true };
@@ -106,6 +100,7 @@ export async function deleteCompetition(id: string) {
   }
 
   revalidatePath('/dashboard');
+  return { success: true };
 }
 
 export async function updateCompetition(id: string, formData: FormData) {

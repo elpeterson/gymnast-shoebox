@@ -25,9 +25,6 @@ export default async function AccountPage() {
         <TabsList>
           <TabsTrigger value="gymnasts">Gymnasts</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="general" disabled>
-            General
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="gymnasts" className="space-y-4">
@@ -38,9 +35,7 @@ export default async function AccountPage() {
           <PasswordForm />
         </TabsContent>
 
-        <TabsContent value="general">
-          {/* TODO fill in with stuff for account name, maybe avatar? I dunno */}
-        </TabsContent>
+
       </Tabs>
     </div>
   );
