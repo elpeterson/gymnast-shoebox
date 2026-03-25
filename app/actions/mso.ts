@@ -207,7 +207,10 @@ export async function importMsoMeet(meet: MsoMeetSummary) {
     }));
 
     if (formattedScores.length > 0) {
-      await supabase.from('scores').insert(formattedScores);
+      const { error: scoresError } = await supabase
+        .from('scores')
+        .insert(formattedScores);
+      if (scoresError) return { error: 'Meet created but scores failed to save.' };
     } else {
       return {
         success: true,

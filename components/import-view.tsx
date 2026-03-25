@@ -24,6 +24,7 @@ export function ImportView({ initialMsoId }: { initialMsoId?: string | null }) {
   const [msoId, setMsoId] = useState(initialMsoId || '');
   const [meets, setMeets] = useState<MsoMeetSummary[]>([]);
   const [isPending, startTransition] = useTransition();
+  const [importingIds, setImportingIds] = useState<Set<string>>(new Set());
   const router = useRouter();
 
   const handleSync = useCallback((idToSync: string) => {
@@ -50,8 +51,16 @@ export function ImportView({ initialMsoId }: { initialMsoId?: string | null }) {
   }, [initialMsoId, handleSync]);
 
   const handleImport = async (meet: MsoMeetSummary) => {
+    if (importingIds.has(meet.id)) return;
+    setImportingIds((prev) => new Set(prev).add(meet.id));
     toast.info(`Importing ${meet.name}...`);
+
     const result = await importMsoMeet(meet);
+    setImportingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(meet.id);
+      return next;
+    });
 
     if (result.error) {
       toast.error(result.error);
@@ -128,7 +137,15 @@ export function ImportView({ initialMsoId }: { initialMsoId?: string | null }) {
                       <Check className="mr-2 h-4 w-4" /> Imported
                     </Button>
                   ) : (
-                    <Button onClick={() => handleImport(meet)}>Import</Button>
+                    <Button
+                      onClick={() => handleImport(meet)}
+                      disabled={importingIds.has(meet.id)}
+                    >
+                      {importingIds.has(meet.id) ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : null}
+                      Import
+                    </Button>
                   )}
                 </div>
               ))}

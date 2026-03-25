@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CompetitionActions } from '@/components/competition-actions';
 import { MAG_APPARATUS, WAG_APPARATUS, COMPETITIONS_PAGE_SIZE } from '@/lib/constants';
 import { loadMoreCompetitions } from '@/app/(main)/dashboard/actions';
+import { toast } from 'sonner';
 
 type ScoreItem = {
   apparatus: string;
@@ -49,7 +50,9 @@ export function CompetitionList({
   function handleLoadMore() {
     startTransition(async () => {
       const result = await loadMoreCompetitions(gymnastId, competitions.length);
-      if (result.data) {
+      if (result.error) {
+        toast.error('Failed to load more competitions. Please try again.');
+      } else if (result.data) {
         setCompetitions((prev) => [...prev, ...result.data!]);
         setHasMore(result.data.length === COMPETITIONS_PAGE_SIZE);
       }

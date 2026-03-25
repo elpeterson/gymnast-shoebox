@@ -90,7 +90,16 @@ export async function createScore(formData: FormData) {
 export async function deleteCompetition(id: string) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('competitions').delete().eq('id', id);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { error } = await supabase
+    .from('competitions')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) {
     return { error: 'Failed to delete competition.' };
@@ -157,7 +166,7 @@ export async function updateCompetition(id: string, formData: FormData) {
     .from('scores')
     .upsert(scoreUpserts, { onConflict: 'competition_id,apparatus' });
 
-  if (scoresError) console.error('Error updating scores', scoresError);
+  if (scoresError) return { error: 'Failed to update scores.' };
 
   revalidatePath('/dashboard');
   return { success: true };
