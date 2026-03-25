@@ -4,6 +4,7 @@ import * as cheerio from 'cheerio';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ensureActiveGymnast } from './gymnast';
+import { parseScoreRow, parseMeetDates, APPARATUS_MAP } from '@/lib/mso-parser';
 
 export type MsoMeetSummary = {
   id: string;
@@ -12,25 +13,6 @@ export type MsoMeetSummary = {
   level: string;
   detailsUrl: string;
   isImported?: boolean;
-};
-
-const APPARATUS_MAP: Record<string, string> = {
-  Floor: 'floor_exercise',
-  'Floor Exercise': 'floor_exercise',
-  Pommel: 'pommel_horse',
-  'Pommel Horse': 'pommel_horse',
-  Rings: 'still_rings',
-  'Still Rings': 'still_rings',
-  Vault: 'vault',
-  PBars: 'parallel_bars',
-  'P Bars': 'parallel_bars',
-  'Parallel Bars': 'parallel_bars',
-  HiBar: 'high_bar',
-  'High Bar': 'high_bar',
-  'Horizontal Bar': 'high_bar',
-  Beam: 'balance_beam',
-  Bars: 'uneven_bars',
-  'Uneven Bars': 'uneven_bars',
 };
 
 export async function fetchMsoMeets(msoId: string) {
@@ -147,40 +129,16 @@ export async function importMsoMeet(meet: MsoMeetSummary) {
       const scoreText = $row.find('span.score').text().trim();
       const placeText = $row.find('span.place').text().trim();
 
-      const value = parseFloat(scoreText);
-      const place = parseInt(placeText.replace('T', ''));
-
       if (eventLabel === 'AA') {
+        const place = parseInt(placeText.replace('T', ''));
         if (!isNaN(place)) allAroundPlace = place;
       } else {
-        const dbApparatus = APPARATUS_MAP[eventLabel];
-        if (dbApparatus && !isNaN(value)) {
-          scoresToInsert.push({
-            apparatus: dbApparatus,
-            value: value,
-            place: isNaN(place) ? null : place,
-          });
-        }
+        const parsed = parseScoreRow(eventLabel, scoreText, placeText);
+        if (parsed) scoresToInsert.push(parsed);
       }
     });
 
-    let startDate: string | null = null;
-    let endDate: string | null = null;
-
-    try {
-      const cleanDateStr = realDateStr.replace(/\s+/g, ' ').trim();
-
-      if (cleanDateStr.includes('-')) {
-        const [start, end] = cleanDateStr.split('-').map((s) => s.trim());
-        startDate = new Date(start).toISOString();
-        endDate = new Date(end).toISOString();
-      } else {
-        startDate = new Date(cleanDateStr).toISOString();
-        endDate = startDate;
-      }
-    } catch {
-      // date parsing is best-effort; null dates are acceptable
-    }
+    const { startDate, endDate } = parseMeetDates(realDateStr);
 
     const { data: comp, error: compError } = await supabase
       .from('competitions')
