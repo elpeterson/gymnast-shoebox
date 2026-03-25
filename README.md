@@ -2,6 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blueviolet?style=flat-square)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/elpeterson/gymnast-shoebox?style=flat-square&label=version)](https://github.com/elpeterson/gymnast-shoebox/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/elpeterson/gymnast-shoebox/ci.yml?style=flat-square&label=tests)](https://github.com/elpeterson/gymnast-shoebox/actions/workflows/ci.yml)
 
 > **"Never lose a score again."**
 
@@ -9,25 +10,24 @@ Gymnast Shoebox is a modern, mobile-first SaaS application designed to solve the
 
 ## 🚀 Features
 *   **Multi-Gymnast Support:** Track scores for multiple children (siblings) under one parent account.
+*   **MAG & WAG Support:** Full support for both Men's and Women's artistic gymnastics disciplines.
 *   **MeetScoresOnline Integration:** Automatically import meet details and scores using an MSO Athlete ID.
 *   **Live Meet Entry:** Enter scores as they happen. Supports incomplete meets and future schedule planning.
-*   **Detailed Scoring:** Track Final Score, Placement, and Start Values.
+*   **Detailed Scoring:** Track Final Score, Start Value, Placement, and All-Around placement.
 *   **Deep Customization:** Toggle fields (like Start Value) to declutter the UI on small screens.
 *   **Themeable:** Dark Mode support with custom "Sterling Gym" branding.
 *   **Secure:** Row Level Security (RLS) ensures data privacy.
 
 ## 🚧 Coming Soon
--   **Women's Gymnastics Support:** Support for uneven bars and beam.
 -   **Offline Support:** PWA capabilities for warehouses with poor signal.
 -   **Data Visualizations:** Charts to track progress over the season.
 -   **Media Uploads:** Attach photos of scorecards or screenshots to meets.
 
 ## 🐛 Known Issues
 -   Dark mode preference is currently stored per-device (local storage), not synced to the user profile.
--   The "All-Around Placement" field is currently missing from the manual entry form (though it imports correctly from MSO).
 
 ## 📖 The Problem
-For parents of competitive gymnasts, tracking progress is a nightmare of fragmentation. 
+For parents of competitive gymnasts, tracking progress is a nightmare of fragmentation.
 - **The "Official" App:** MyUSAGym is unreliable, often crashes during meets, and has poor support for non-iOS devices.
 - **The Fragmentation:** Meets are split across ScoreCat, MyMeetScoresOnline, and paper printouts.
 - **The Data Loss:** There is no single, reliable "source of truth" for a gymnast's history over the years.
@@ -47,6 +47,7 @@ This project utilizes a modern, serverless architecture designed for high perfor
 - **Database & Auth:** [Supabase](https://supabase.com/) (PostgreSQL)
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components:** [shadcn/ui](https://ui.shadcn.com/)
+- **Testing:** [Vitest](https://vitest.dev/)
 - **Deployment:** [Vercel](https://vercel.com/)
 
 
@@ -77,7 +78,7 @@ create table public.gymnasts (
   user_id uuid references auth.users(id) on delete cascade not null,
   name text not null,
   mso_id text, -- MeetScoresOnline Athlete ID
-  gender text default 'male',
+  discipline text default 'MAG' not null, -- 'MAG' or 'WAG'
   created_at timestamptz default now() not null,
   updated_at timestamptz default now() not null
 );
@@ -91,6 +92,8 @@ create table public.competitions (
   end_date date,
   level text,
   all_around_place integer,
+  show_start_value boolean default false not null,
+  show_place boolean default true not null,
   created_at timestamptz default now() not null,
   updated_at timestamptz default now() not null
 );
@@ -99,10 +102,20 @@ create table public.scores (
   id uuid default gen_random_uuid() primary key,
   competition_id uuid references public.competitions(id) on delete cascade not null,
   apparatus text not null,
-  value numeric,      -- Nullable for future/incomplete meets
+  value numeric,       -- Nullable for future/incomplete meets
   start_value numeric, -- Optional difficulty score
-  place integer,      -- Optional ranking
+  place integer,       -- Optional ranking
   created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null,
+  constraint scores_competition_apparatus_unique unique (competition_id, apparatus)
+);
+
+create table public.user_settings (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null unique,
+  theme text default 'system' not null,
+  show_start_values boolean default false not null,
+  show_placements boolean default true not null,
   updated_at timestamptz default now() not null
 );
 
@@ -110,6 +123,7 @@ create table public.scores (
 alter table public.gymnasts enable row level security;
 alter table public.competitions enable row level security;
 alter table public.scores enable row level security;
+alter table public.user_settings enable row level security;
 
 -- 3. Create RLS Policies (CRUD)
 -- Gymnasts
@@ -130,10 +144,16 @@ create policy "Users can insert own scores" on public.scores for insert with che
 create policy "Users can update own scores" on public.scores for update using (exists (select 1 from public.competitions where competitions.id = scores.competition_id and competitions.user_id = auth.uid()));
 create policy "Users can delete own scores" on public.scores for delete using (exists (select 1 from public.competitions where competitions.id = scores.competition_id and competitions.user_id = auth.uid()));
 
+-- User Settings
+create policy "Users can view own settings" on public.user_settings for select using (auth.uid() = user_id);
+create policy "Users can insert own settings" on public.user_settings for insert with check (auth.uid() = user_id);
+create policy "Users can update own settings" on public.user_settings for update using (auth.uid() = user_id);
+
 -- 4. Create Helper View (The "API" for the dashboard)
 create or replace view public.competitions_with_scores as
 select
-  c.id, c.user_id, c.gymnast_id, c.name, c.start_date, c.end_date, c.level, c.all_around_place, c.created_at,
+  c.id, c.user_id, c.gymnast_id, c.name, c.start_date, c.end_date, c.level,
+  c.all_around_place, c.show_start_value, c.show_place, c.created_at,
   coalesce(
     (select json_agg(json_build_object('apparatus', s.apparatus, 'value', s.value, 'start_value', s.start_value, 'place', s.place)) from public.scores s where s.competition_id = c.id),
     '[]'::json
@@ -150,3 +170,13 @@ grant select on public.competitions_with_scores to authenticated;
 ```bash
 npm run dev
 ```
+
+## 🧪 Testing
+
+```bash
+npm test             # run all tests once
+npm run test:watch   # watch mode
+npm run test:coverage  # with coverage report
+```
+
+Tests live in `lib/__tests__/` and are run automatically on every push via GitHub Actions.
