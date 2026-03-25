@@ -6,6 +6,7 @@ import { BetaBanner } from '@/components/beta-banner';
 import { ensureActiveGymnast } from '@/app/actions/gymnast';
 import { CloudDownload } from 'lucide-react';
 import { CompetitionList } from '@/components/competition-list';
+import { COMPETITIONS_PAGE_SIZE } from '@/lib/constants';
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -25,12 +26,13 @@ export default async function Dashboard() {
     .eq('id', activeGymnastId)
     .single();
 
-  const { data: competitions, error } = await supabase
+  const { data: competitions, error, count } = await supabase
     .from('competitions_with_scores')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq('gymnast_id', activeGymnastId)
     .order('start_date', { ascending: false, nullsFirst: true })
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(0, COMPETITIONS_PAGE_SIZE - 1);
 
   if (error) {
     console.error('Error fetching competitions:', error);
@@ -59,6 +61,8 @@ export default async function Dashboard() {
       <CompetitionList
         competitions={competitions || []}
         discipline={gymnast?.discipline || 'MAG'}
+        gymnastId={activeGymnastId!}
+        hasMore={(count ?? 0) > COMPETITIONS_PAGE_SIZE}
       />
     </div>
   );

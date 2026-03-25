@@ -1,8 +1,11 @@
 'use client';
 
+import { useState, useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { CompetitionActions } from '@/components/competition-actions';
-import { MAG_APPARATUS, WAG_APPARATUS } from '@/lib/constants';
+import { MAG_APPARATUS, WAG_APPARATUS, COMPETITIONS_PAGE_SIZE } from '@/lib/constants';
+import { loadMoreCompetitions } from '@/app/(main)/dashboard/actions';
 
 type ScoreItem = {
   apparatus: string;
@@ -28,13 +31,30 @@ type Competition = {
 interface CompetitionListProps {
   competitions: Competition[];
   discipline: string;
+  gymnastId: string;
+  hasMore: boolean;
 }
 
 export function CompetitionList({
-  competitions,
+  competitions: initialCompetitions,
   discipline,
+  gymnastId,
+  hasMore: initialHasMore,
 }: CompetitionListProps) {
+  const [competitions, setCompetitions] = useState(initialCompetitions);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isPending, startTransition] = useTransition();
   const apparatusConfig = discipline === 'WAG' ? WAG_APPARATUS : MAG_APPARATUS;
+
+  function handleLoadMore() {
+    startTransition(async () => {
+      const result = await loadMoreCompetitions(gymnastId, competitions.length);
+      if (result.data) {
+        setCompetitions((prev) => [...prev, ...result.data!]);
+        setHasMore(result.data.length === COMPETITIONS_PAGE_SIZE);
+      }
+    });
+  }
 
   if (!competitions || competitions.length === 0) {
     return (
@@ -156,6 +176,13 @@ export function CompetitionList({
           </Card>
         ))}
       </div>
+      {hasMore && (
+        <div className="flex justify-center">
+          <Button variant="outline" onClick={handleLoadMore} disabled={isPending}>
+            {isPending ? 'Loading...' : 'Load More'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

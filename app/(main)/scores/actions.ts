@@ -144,31 +144,20 @@ export async function updateCompetition(id: string, formData: FormData) {
       ? WAG_APPARATUS.map((a) => a.id)
       : MAG_APPARATUS.map((a) => a.id);
 
-  for (const app of apparatusList) {
-    const rawValue = formData.get(app);
-    const rawPlace = formData.get(`${app}_place`);
-    const rawStartValue = formData.get(`${app}_sv`);
+  const scoreUpserts = apparatusList.map((app) => ({
+    competition_id: id,
+    apparatus: app,
+    value: formData.get(app) ? parseFloat(formData.get(app)!.toString()) : null,
+    place: formData.get(`${app}_place`) ? parseInt(formData.get(`${app}_place`)!.toString()) : null,
+    start_value: formData.get(`${app}_sv`) ? parseFloat(formData.get(`${app}_sv`)!.toString()) : null,
+    updated_at: new Date().toISOString(),
+  }));
 
-    const value = rawValue ? parseFloat(rawValue.toString()) : null;
-    const place = rawPlace ? parseInt(rawPlace.toString()) : null;
-    const startValue = rawStartValue
-      ? parseFloat(rawStartValue.toString())
-      : null;
+  const { error: scoresError } = await supabase
+    .from('scores')
+    .upsert(scoreUpserts, { onConflict: 'competition_id,apparatus' });
 
-    const { error } = await supabase.from('scores').upsert(
-      {
-        competition_id: id,
-        apparatus: app,
-        value,
-        place,
-        start_value: startValue,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'competition_id, apparatus' },
-    );
-
-    if (error) console.error('Error updating score', error);
-  }
+  if (scoresError) console.error('Error updating scores', scoresError);
 
   revalidatePath('/dashboard');
   return { success: true };

@@ -43,7 +43,7 @@ export async function fetchMsoMeets(msoId: string) {
     const response = await fetch(
       `https://www.meetscoresonline.com/Athlete.MyScores/${msoId}`,
       {
-        cache: 'no-store',
+        next: { revalidate: 300 }, // cache meet list for 5 minutes
         headers: {
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
