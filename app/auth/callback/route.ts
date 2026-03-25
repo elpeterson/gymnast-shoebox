@@ -20,8 +20,6 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(new URL(next, request.url));
     } else {
-      // TODO remove this debugging later
-      console.error('VerifyOtp Error:', error.message);
       return NextResponse.redirect(
         new URL(
           `/login?error=${encodeURIComponent(error.message)}`,
@@ -36,8 +34,6 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(new URL(next, request.url));
     } else {
-      // TODO remove this debug as well
-      console.error('ExchangeCode Error:', error.message);
       return NextResponse.redirect(
         new URL(
           `/login?error=${encodeURIComponent(error.message)}`,
