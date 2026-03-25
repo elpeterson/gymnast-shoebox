@@ -44,6 +44,10 @@ export function CompetitionList({
 }: CompetitionListProps) {
   const [competitions, setCompetitions] = useState(initialCompetitions);
   const [hasMore, setHasMore] = useState(initialHasMore);
+
+  function handleDelete(id: string) {
+    setCompetitions((prev) => prev.filter((c) => c.id !== id));
+  }
   const [isPending, startTransition] = useTransition();
   const apparatusConfig = discipline === 'WAG' ? WAG_APPARATUS : MAG_APPARATUS;
 
@@ -119,7 +123,7 @@ export function CompetitionList({
               </div>
 
               <div className="text-right flex flex-col items-end gap-2">
-                <CompetitionActions id={comp.id} name={comp.name} />
+                <CompetitionActions id={comp.id} name={comp.name} onDelete={handleDelete} />
                 <div>
                   <p className="text-sm font-medium text-muted-foreground uppercase">
                     All Around
