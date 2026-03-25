@@ -1,8 +1,12 @@
 'use client';
 
+import { useState, useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { CompetitionActions } from '@/components/competition-actions';
-import { MAG_APPARATUS, WAG_APPARATUS } from '@/lib/constants';
+import { MAG_APPARATUS, WAG_APPARATUS, COMPETITIONS_PAGE_SIZE } from '@/lib/constants';
+import { loadMoreCompetitions } from '@/app/(main)/dashboard/actions';
+import { toast } from 'sonner';
 
 type ScoreItem = {
   apparatus: string;
@@ -28,13 +32,36 @@ type Competition = {
 interface CompetitionListProps {
   competitions: Competition[];
   discipline: string;
+  gymnastId: string;
+  hasMore: boolean;
 }
 
 export function CompetitionList({
-  competitions,
+  competitions: initialCompetitions,
   discipline,
+  gymnastId,
+  hasMore: initialHasMore,
 }: CompetitionListProps) {
+  const [competitions, setCompetitions] = useState(initialCompetitions);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+
+  function handleDelete(id: string) {
+    setCompetitions((prev) => prev.filter((c) => c.id !== id));
+  }
+  const [isPending, startTransition] = useTransition();
   const apparatusConfig = discipline === 'WAG' ? WAG_APPARATUS : MAG_APPARATUS;
+
+  function handleLoadMore() {
+    startTransition(async () => {
+      const result = await loadMoreCompetitions(gymnastId, competitions.length);
+      if (result.error) {
+        toast.error('Failed to load more competitions. Please try again.');
+      } else if (result.data) {
+        setCompetitions((prev) => [...prev, ...result.data!]);
+        setHasMore(result.data.length === COMPETITIONS_PAGE_SIZE);
+      }
+    });
+  }
 
   if (!competitions || competitions.length === 0) {
     return (
@@ -96,7 +123,7 @@ export function CompetitionList({
               </div>
 
               <div className="text-right flex flex-col items-end gap-2">
-                <CompetitionActions id={comp.id} name={comp.name} />
+                <CompetitionActions id={comp.id} name={comp.name} onDelete={handleDelete} />
                 <div>
                   <p className="text-sm font-medium text-muted-foreground uppercase">
                     All Around
@@ -156,6 +183,13 @@ export function CompetitionList({
           </Card>
         ))}
       </div>
+      {hasMore && (
+        <div className="flex justify-center">
+          <Button variant="outline" onClick={handleLoadMore} disabled={isPending}>
+            {isPending ? 'Loading...' : 'Load More'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

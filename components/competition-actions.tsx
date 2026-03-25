@@ -23,13 +23,22 @@ import { deleteCompetition } from '@/app/(main)/scores/actions';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
-export function CompetitionActions({ id, name }: { id: string; name: string }) {
+export function CompetitionActions({
+  id,
+  name,
+  onDelete,
+}: {
+  id: string;
+  name: string;
+  onDelete?: (id: string) => void;
+}) {
   const handleDelete = async () => {
     const result = await deleteCompetition(id);
     if (result?.error) {
       toast.error('Failed to delete');
     } else {
       toast.success('Competition deleted');
+      onDelete?.(id);
     }
   };
 
