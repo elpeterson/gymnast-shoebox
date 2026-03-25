@@ -14,7 +14,7 @@ export const WAG_APPARATUS = [
   { id: 'floor_exercise', label: 'Floor' },
 ];
 
-export const COMPETITIONS_PAGE_SIZE = 20;
+export const COMPETITIONS_PAGE_SIZE = 10;
 
 export const ALL_APPARATUS = [
   ...MAG_APPARATUS,
