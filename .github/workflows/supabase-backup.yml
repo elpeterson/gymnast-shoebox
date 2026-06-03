@@ -27,7 +27,9 @@ jobs:
           test -n "$SUPABASE_DB_URL"
 
           mkdir -p backups
-          pg_dump \
+          /usr/lib/postgresql/17/bin/pg_dump --version
+
+          /usr/lib/postgresql/17/bin/pg_dump \
             "$SUPABASE_DB_URL" \
             --format=custom \
             --no-owner \
