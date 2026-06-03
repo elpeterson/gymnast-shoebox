@@ -2,8 +2,9 @@ name: Supabase Heartbeat
 
 on:
   schedule:
-    # Monday and Friday at 09:00 UTC
-    - cron: "0 9 * * 1,5"
+    # Daily at 09:00 UTC. Supabase Free projects can be paused for inactivity,
+    # so keep this comfortably more frequent than the inactivity window.
+    - cron: "0 9 * * *"
   workflow_dispatch:
 
 jobs:
@@ -13,11 +14,12 @@ jobs:
       - name: Keep Supabase awake
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          echo "SUPABASE_URL=[$SUPABASE_URL]"
-          echo "HIT=[$SUPABASE_URL/rest/v1/competitions?select=id&limit=1]"
-          curl -sS -v \
+          test -n "$SUPABASE_URL"
+          test -n "$SUPABASE_SERVICE_ROLE_KEY"
+
+          curl --fail --silent --show-error \
             "$SUPABASE_URL/rest/v1/competitions?select=id&limit=1" \
-            -H "apikey: $SUPABASE_ANON_KEY" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY"
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
