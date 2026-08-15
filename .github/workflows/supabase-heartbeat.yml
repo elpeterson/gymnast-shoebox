@@ -2,15 +2,27 @@ name: Supabase Heartbeat
 
 on:
   schedule:
-    # Daily at 09:00 UTC. Supabase Free projects can be paused for inactivity,
-    # so keep this comfortably more frequent than the inactivity window.
     - cron: "0 9 * * *"
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/supabase-heartbeat.yml"
+
+permissions:
+  contents: write
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
       - name: Keep Supabase awake
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -23,3 +35,26 @@ jobs:
             "$SUPABASE_URL/rest/v1/competitions?select=id&limit=1" \
             -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+
+      - name: Keep GitHub scheduled workflows active
+        run: |
+          marker_file=".github/workflow-keepalive"
+          now="$(date -u +%s)"
+          last="0"
+
+          if [ -f "$marker_file" ]; then
+            last="$(cat "$marker_file")"
+          fi
+
+          if [ $((now - last)) -lt 3888000 ]; then
+            echo "The last keepalive commit is less than 45 days old."
+            exit 0
+          fi
+
+          printf '%s\n' "$now" > "$marker_file"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$marker_file"
+          git commit -m "chore: keep scheduled workflows active"
+          git push
