@@ -1,17 +1,32 @@
 'use server';
 
 import * as cheerio from 'cheerio';
-import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { ensureActiveGymnast } from './gymnast';
+import { ensureActiveGymnast } from '@/app/actions/gymnast';
+import { createClient } from '@/lib/supabase/server';
+import { parseMsoDateRange } from '@/lib/mso';
 
 export type MsoMeetSummary = {
   id: string;
   name: string;
   dateStr: string;
   level: string;
-  detailsUrl: string;
-  isImported?: boolean;
+  isImported: boolean;
+};
+
+type ParsedMsoMeet = {
+  name: string;
+  level: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  allAroundPlace: number | null;
+  scores: { apparatus: string; value: number; place: number | null }[];
+};
+
+const MSO_ORIGIN = 'https://www.meetscoresonline.com';
+const MSO_HEADERS = {
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
 };
 
 const APPARATUS_MAP: Record<string, string> = {
@@ -33,192 +48,178 @@ const APPARATUS_MAP: Record<string, string> = {
   'Uneven Bars': 'uneven_bars',
 };
 
-export async function fetchMsoMeets(msoId: string) {
-  const supabase = await createClient();
-  const activeGymnastId = await ensureActiveGymnast();
+function safeMeetUrl(meetId: string) {
+  if (!/^\/results\/[A-Za-z0-9._~!$&'()*+,;=:@%/-]+$/.test(meetId)) {
+    throw new Error('Invalid MSO meet identifier.');
+  }
+  return new URL(meetId, MSO_ORIGIN).toString();
+}
 
-  if (!msoId) return { error: 'No MSO ID provided' };
+async function getLinkedGymnast() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Authentication required' as const };
+
+  const gymnastId = await ensureActiveGymnast();
+  if (!gymnastId) return { error: 'No gymnast profile selected.' as const };
+
+  const { data: gymnast } = await supabase
+    .from('gymnasts')
+    .select('id, name, mso_id')
+    .eq('id', gymnastId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (!gymnast?.mso_id) {
+    return { error: 'Link an MSO Athlete ID to this gymnast first.' as const };
+  }
+
+  return { supabase, user, gymnast };
+}
+
+export async function fetchMsoMeets() {
+  const linked = await getLinkedGymnast();
+  if ('error' in linked) return { error: linked.error };
+  const { supabase, gymnast } = linked;
 
   try {
     const response = await fetch(
-      `https://www.meetscoresonline.com/Athlete.MyScores/${msoId}`,
-      {
-        cache: 'no-store',
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        },
-      }
+      `${MSO_ORIGIN}/Athlete.MyScores/${encodeURIComponent(gymnast.mso_id)}`,
+      { cache: 'no-store', headers: MSO_HEADERS }
     );
+    if (!response.ok) return { error: `MSO returned status ${response.status}.` };
 
-    if (!response.ok)
-      return { error: `Failed to reach MSO (Status: ${response.status})` };
+    const $ = cheerio.load(await response.text());
+    const meets = new Map<string, Omit<MsoMeetSummary, 'isImported'>>();
 
-    const html = await response.text();
-    const $ = cheerio.load(html);
-    const meets: MsoMeetSummary[] = [];
+    $('a[href^="/results/"]').each((_index, element) => {
+      const link = $(element);
+      const id = link.attr('href');
+      const columns = link.closest('tr').find('td');
+      if (!id || columns.length === 0) return;
 
-    $('a[href^="/results/"]').each((i, el) => {
-      const link = $(el);
-      const href = link.attr('href');
-      const row = link.closest('tr');
-      if (row.length === 0) return;
-
-      const cols = row.find('td');
-
-      let name = $(cols[0]).text().trim();
-      if (!name) name = link.text().trim();
-
-      const level = $(cols[2]).text().trim();
-
-      let dateStr = 'Date TBD';
-      if (cols.length > 4) {
-        const val = $(cols[4]).text().trim();
-        if (val) dateStr = val;
-      }
-
-      if (name === level && name.length < 5) return;
-
-      if (name && href && !meets.find((m) => m.id === href)) {
-        meets.push({
-          id: href,
-          name,
-          dateStr,
-          level,
-          detailsUrl: `https://www.meetscoresonline.com${href}`,
-        });
-      }
+      const name = $(columns[0]).text().trim() || link.text().trim();
+      const level = $(columns[2]).text().trim();
+      const dateStr = $(columns[4]).text().trim() || 'Date TBD';
+      if (name && name !== level) meets.set(id, { id, name, level, dateStr });
     });
 
-    if (meets.length === 0) {
-      return { error: 'No meets found. Double check the Athlete ID.' };
+    if (meets.size === 0) {
+      return { error: 'No meets were found for the linked MSO athlete.' };
     }
 
     const { data: existing } = await supabase
       .from('competitions')
-      .select('name')
-      .eq('gymnast_id', activeGymnastId);
+      .select('name, mso_meet_id')
+      .eq('gymnast_id', gymnast.id);
+    const ids = new Set(existing?.map((meet) => meet.mso_meet_id).filter(Boolean));
+    const legacyNames = new Set(
+      existing?.filter((meet) => !meet.mso_meet_id).map((meet) => meet.name)
+    );
 
-    const existingNames = new Set(existing?.map((e) => e.name));
-
-    const processedMeets = meets.map((m) => ({
-      ...m,
-      isImported: existingNames.has(m.name),
-    }));
-
-    return { success: true, meets: processedMeets };
-  } catch (e) {
-    console.error(e);
-    return { error: 'Error parsing MSO data' };
+    return {
+      success: true,
+      meets: Array.from(meets.values()).map((meet) => ({
+        ...meet,
+        isImported: ids.has(meet.id) || legacyNames.has(meet.name),
+      })),
+    };
+  } catch (error) {
+    console.error('MSO meet list failed:', error);
+    return { error: 'MSO could not be reached or its page format changed.' };
   }
 }
 
-export async function importMsoMeet(meet: MsoMeetSummary) {
-  const supabase = await createClient();
-  const gymnastId = await ensureActiveGymnast();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+async function parseMeet(meet: MsoMeetSummary): Promise<ParsedMsoMeet> {
+  const response = await fetch(safeMeetUrl(meet.id), {
+    cache: 'no-store',
+    headers: MSO_HEADERS,
+  });
+  if (!response.ok) throw new Error(`MSO returned status ${response.status}.`);
 
-  if (!user || !gymnastId) return { error: 'Authentication required' };
+  const $ = cheerio.load(await response.text());
+  const name = $('h1.event-title').text().trim() || meet.name;
+  const rawDate = $('#MeetDetails h5 strong').first().text().trim() || meet.dateStr;
+  const scores: ParsedMsoMeet['scores'] = [];
+  let allAroundPlace: number | null = null;
+
+  $('#athlete table tbody tr').each((_index, row) => {
+    const eventLabel = $(row).find('th').text().trim();
+    const value = Number.parseFloat($(row).find('span.score').text().trim());
+    const place = Number.parseInt($(row).find('span.place').text().replace('T', ''), 10);
+
+    if (eventLabel === 'AA') {
+      if (!Number.isNaN(place)) allAroundPlace = place;
+      return;
+    }
+
+    const apparatus = APPARATUS_MAP[eventLabel];
+    if (apparatus && !Number.isNaN(value)) {
+      scores.push({ apparatus, value, place: Number.isNaN(place) ? null : place });
+    }
+  });
+
+  if (scores.length === 0) throw new Error('MSO returned no recognizable event scores.');
+  const { startDate, endDate } = parseMsoDateRange(rawDate);
+  return {
+    name,
+    level: meet.level || null,
+    startDate,
+    endDate,
+    allAroundPlace,
+    scores,
+  };
+}
+
+export async function syncMsoMeet(meet: MsoMeetSummary) {
+  const linked = await getLinkedGymnast();
+  if ('error' in linked) return { error: linked.error };
+  const { supabase, gymnast } = linked;
 
   try {
-    const response = await fetch(meet.detailsUrl, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-    });
-
-    const html = await response.text();
-    const $ = cheerio.load(html);
-
-    let realName = $('h1.event-title').text().trim();
-    if (!realName) realName = meet.name;
-
-    const realDateStr =
-      $('#MeetDetails h5 strong').first().text().trim() || meet.dateStr;
-
-    const scoresToInsert: any[] = [];
-    let allAroundPlace: number | null = null;
-
-    $('#athlete table tbody tr').each((i, row) => {
-      const $row = $(row);
-      const eventLabel = $row.find('th').text().trim();
-      const scoreText = $row.find('span.score').text().trim();
-      const placeText = $row.find('span.place').text().trim();
-
-      const value = parseFloat(scoreText);
-      const place = parseInt(placeText.replace('T', ''));
-
-      if (eventLabel === 'AA') {
-        if (!isNaN(place)) allAroundPlace = place;
-      } else {
-        const dbApparatus = APPARATUS_MAP[eventLabel];
-        if (dbApparatus && !isNaN(value)) {
-          scoresToInsert.push({
-            apparatus: dbApparatus,
-            value: value,
-            place: isNaN(place) ? null : place,
-          });
-        }
-      }
-    });
-
-    let startDate: string | null = null;
-    let endDate: string | null = null;
-
-    try {
-      const cleanDateStr = realDateStr.replace(/\s+/g, ' ').trim();
-
-      if (cleanDateStr.includes('-')) {
-        const [start, end] = cleanDateStr.split('-').map((s) => s.trim());
-        startDate = new Date(start).toISOString();
-        endDate = new Date(end).toISOString();
-      } else {
-        startDate = new Date(cleanDateStr).toISOString();
-        endDate = startDate;
-      }
-    } catch (e) {
-      console.log('Date parsing skipped for:', realDateStr);
-    }
-
-    const { data: comp, error: compError } = await supabase
+    const parsed = await parseMeet(meet);
+    let { data: existing } = await supabase
       .from('competitions')
-      .insert({
-        user_id: user.id,
-        gymnast_id: gymnastId,
-        name: realName,
-        level: meet.level,
-        start_date: startDate,
-        end_date: endDate,
-        all_around_place: allAroundPlace,
-      })
-      .select()
-      .single();
+      .select('id, notes')
+      .eq('gymnast_id', gymnast.id)
+      .eq('mso_meet_id', meet.id)
+      .maybeSingle();
 
-    if (compError) return { error: compError.message };
-
-    const formattedScores = scoresToInsert.map((s) => ({
-      competition_id: comp.id,
-      apparatus: s.apparatus,
-      value: s.value,
-      place: s.place,
-    }));
-
-    if (formattedScores.length > 0) {
-      await supabase.from('scores').insert(formattedScores);
-    } else {
-      return {
-        success: true,
-        warning: "Meet created, but score table format didn't match.",
-      };
+    if (!existing) {
+      const legacy = await supabase
+        .from('competitions')
+        .select('id, notes')
+        .eq('gymnast_id', gymnast.id)
+        .eq('name', parsed.name)
+        .is('mso_meet_id', null)
+        .maybeSingle();
+      existing = legacy.data;
     }
+
+    const { error } = await supabase.rpc('save_competition', {
+      p_competition_id: existing?.id ?? null,
+      p_gymnast_id: gymnast.id,
+      p_name: parsed.name,
+      p_level: parsed.level,
+      p_start_date: parsed.startDate,
+      p_end_date: parsed.endDate,
+      p_all_around_place: parsed.allAroundPlace,
+      p_notes: existing?.notes ?? null,
+      p_mso_meet_id: meet.id,
+      p_scores: parsed.scores.map((score) => ({
+        ...score,
+        start_value: null,
+      })),
+    });
+    if (error) return { error: error.message };
 
     revalidatePath('/dashboard');
-    return { success: true };
-  } catch (e) {
-    console.error(e);
-    return { error: 'Failed to import meet' };
+    revalidatePath('/import');
+    return { success: true, updated: Boolean(existing) };
+  } catch (error) {
+    console.error('MSO sync failed:', error);
+    return { error: error instanceof Error ? error.message : 'MSO sync failed.' };
   }
 }

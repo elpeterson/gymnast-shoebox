@@ -39,6 +39,7 @@ type Gymnast = {
   id: string;
   name: string;
   mso_id?: string | null;
+  gender?: string | null;
 };
 
 export function GymnastList({ gymnasts }: { gymnasts: Gymnast[] }) {
@@ -130,6 +131,19 @@ function GymnastRow({ gymnast }: { gymnast: Gymnast }) {
                     defaultValue={gymnast.name}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`gender-${gymnast.id}`}>Gymnastics Program</Label>
+                  <select
+                    id={`gender-${gymnast.id}`}
+                    name="gender"
+                    defaultValue={gymnast.gender === 'male' ? 'male' : 'female'}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="female">Women’s (4 events)</option>
+                    <option value="male">Men’s (6 events)</option>
+                  </select>
                 </div>
 
                 <div className="space-y-2">

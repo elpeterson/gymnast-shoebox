@@ -61,6 +61,8 @@ export async function createGymnast(formData: FormData) {
   if (!user) return { error: 'Not authenticated' };
 
   const name = formData.get('name') as string;
+  const gender = formData.get('gender') === 'male' ? 'male' : 'female';
+  const msoId = formData.get('mso_id')?.toString().trim() || null;
   if (!name) return { error: 'Name is required' };
 
   const { data, error } = await supabase
@@ -68,7 +70,8 @@ export async function createGymnast(formData: FormData) {
     .insert({
       user_id: user.id,
       name: name,
-      gender: 'male',
+      gender,
+      mso_id: msoId,
     })
     .select()
     .single();
@@ -92,6 +95,7 @@ export async function updateGymnast(id: string, formData: FormData) {
 
   const name = formData.get('name') as string;
   const mso_id = formData.get('mso_id') as string;
+  const gender = formData.get('gender') === 'male' ? 'male' : 'female';
 
   if (!name) return { error: 'Name is required' };
 
@@ -100,6 +104,7 @@ export async function updateGymnast(id: string, formData: FormData) {
     .update({
       name,
       mso_id: mso_id || null,
+      gender,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
@@ -109,6 +114,31 @@ export async function updateGymnast(id: string, formData: FormData) {
 
   revalidatePath('/account');
   revalidatePath('/');
+  return { success: true };
+}
+
+export async function linkMsoAthlete(msoId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const gymnastId = await ensureActiveGymnast();
+  const normalized = msoId.trim();
+  if (!gymnastId) return { error: 'No gymnast profile selected.' };
+  if (!/^\d+$/.test(normalized)) return { error: 'Enter a valid numeric MSO Athlete ID.' };
+
+  const { error } = await supabase
+    .from('gymnasts')
+    .update({ mso_id: normalized, updated_at: new Date().toISOString() })
+    .eq('id', gymnastId)
+    .eq('user_id', user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/account');
+  revalidatePath('/import');
   return { success: true };
 }
 

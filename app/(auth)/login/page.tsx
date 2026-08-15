@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { login, signup, resetPassword } from './actions';
+import { login, resetPassword } from './actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,17 +31,6 @@ export default function LoginPage() {
     });
   };
 
-  const handleSignup = async (formData: FormData) => {
-    setError(null);
-    setSuccessMessage(null);
-    startTransition(async () => {
-      const result = await signup(formData);
-      if (result?.error) setError(result.error);
-      else if (result?.success)
-        setSuccessMessage('Please check your email to confirm your account.');
-    });
-  };
-
   const handleReset = async (formData: FormData) => {
     setError(null);
     setSuccessMessage(null);
@@ -62,7 +51,7 @@ export default function LoginPage() {
           <CardDescription>
             {view === 'forgot'
               ? 'Reset your password'
-              : 'Sign in to track your scores'}
+              : 'Private family score archive'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -126,25 +115,6 @@ export default function LoginPage() {
                     Sign In with Password
                   </Button>
 
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Or
-                      </span>
-                    </div>
-                  </div>
-
-                  <Button
-                    formAction={handleSignup}
-                    variant="outline"
-                    className="w-full"
-                    disabled={isPending}
-                  >
-                    Register as a New User
-                  </Button>
                 </>
               ) : (
                 <>

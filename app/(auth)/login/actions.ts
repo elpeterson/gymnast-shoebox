@@ -23,30 +23,6 @@ export async function login(formData: FormData) {
   redirect('/dashboard');
 }
 
-export async function signup(formData: FormData) {
-  const supabase = await createClient();
-
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-
-  const origin =
-    process.env.NEXT_PUBLIC_BASE_URL || 'https://gymnastshoebox.elpeterson.com';
-
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback?next=/account`,
-    },
-  });
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  return { success: true };
-}
-
 export async function signInWithMagicLink(formData: FormData) {
   const supabase = await createClient();
   const email = formData.get('email') as string;

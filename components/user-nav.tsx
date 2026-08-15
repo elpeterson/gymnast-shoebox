@@ -8,7 +8,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
   DropdownMenuSub,
   DropdownMenuSubTrigger,
@@ -19,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { User, Settings, LogOut, Moon, Sun, Laptop } from 'lucide-react';
+import { User, LogOut, Moon, Sun, Laptop } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 

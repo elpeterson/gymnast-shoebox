@@ -147,6 +147,22 @@ export function GymnastSwitcher({
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-gymnast-gender">Gymnastics Program</Label>
+              <select
+                id="new-gymnast-gender"
+                name="gender"
+                defaultValue="female"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="female">Women’s (4 events)</option>
+                <option value="male">Men’s (6 events)</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-gymnast-mso">MSO Athlete ID (Optional)</Label>
+              <Input id="new-gymnast-mso" name="mso_id" inputMode="numeric" />
+            </div>
           </div>
           <DialogFooter>
             <Button

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { PasswordForm } from '@/components/password-form';
 import { GymnastList } from '@/components/gymnast-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ExportPanel } from '@/components/export-panel';
 
 export default async function AccountPage() {
   const supabase = await createClient();
@@ -11,7 +12,7 @@ export default async function AccountPage() {
 
   const { data: gymnasts } = await supabase
     .from('gymnasts')
-    .select('id, name, mso_id')
+    .select('id, name, mso_id, gender')
     .eq('user_id', user?.id)
     .order('created_at', { ascending: true });
 
@@ -32,6 +33,7 @@ export default async function AccountPage() {
 
         <TabsContent value="gymnasts" className="space-y-4">
           {gymnasts && <GymnastList gymnasts={gymnasts} />}
+          <ExportPanel />
         </TabsContent>
 
         <TabsContent value="security" className="space-y-4">

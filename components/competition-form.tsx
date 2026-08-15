@@ -16,6 +16,11 @@ import { toast } from 'sonner';
 import { createScore, updateCompetition } from '@/app/(main)/scores/actions';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import {
+  apparatusForProgram,
+  displayApparatus,
+  type GymnastProgram,
+} from '@/lib/gymnastics';
 
 interface CompetitionFormProps {
   initialData?: {
@@ -25,6 +30,7 @@ interface CompetitionFormProps {
     end_date: string | null;
     level: string | null;
     all_around_place: number | null;
+    notes: string | null;
     scores: {
       apparatus: string;
       value: number | null;
@@ -34,13 +40,17 @@ interface CompetitionFormProps {
   };
 }
 
-export function CompetitionForm({ initialData }: CompetitionFormProps) {
+export function CompetitionForm({
+  initialData,
+  gymnastProgram = 'female',
+}: CompetitionFormProps & { gymnastProgram?: GymnastProgram }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const isEditing = !!initialData;
 
   const [showSV, setShowSV] = useState(false);
   const [showPlace, setShowPlace] = useState(true);
+  const apparatuses = apparatusForProgram(gymnastProgram);
 
   const handleSubmit = async (formData: FormData) => {
     startTransition(async () => {
@@ -60,7 +70,7 @@ export function CompetitionForm({ initialData }: CompetitionFormProps) {
           router.push('/dashboard');
           router.refresh();
         }
-      } catch (e) {
+      } catch {
         toast.error('An unexpected error occurred.');
       }
     });
@@ -131,6 +141,22 @@ export function CompetitionForm({ initialData }: CompetitionFormProps) {
             </div>
           </div>
 
+          <div className="grid w-full items-center gap-1.5">
+            <Label htmlFor="notes">
+              Meet Notes{' '}
+              <span className="text-muted-foreground font-normal">(Optional)</span>
+            </Label>
+            <textarea
+              name="notes"
+              id="notes"
+              rows={3}
+              maxLength={2000}
+              placeholder="Awards, routine notes, or anything worth remembering"
+              defaultValue={initialData?.notes || ''}
+              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+          </div>
+
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="start_date">
@@ -189,78 +215,18 @@ export function CompetitionForm({ initialData }: CompetitionFormProps) {
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <ScoreInput
-                label="Uneven Bars"
-                name="uneven_bars"
-                initVal={getScore('uneven_bars')}
-                initPlace={getPlace('uneven_bars')}
-                initSV={getSV('uneven_bars')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
-              <ScoreInput
-                label="Balance Beam"
-                name="balance_beam"
-                initVal={getScore('balance_beam')}
-                initPlace={getPlace('balance_beam')}
-                initSV={getSV('balance_beam')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
-              <ScoreInput
-                label="Floor Exercise"
-                name="floor_exercise"
-                initVal={getScore('floor_exercise')}
-                initPlace={getPlace('floor_exercise')}
-                initSV={getSV('floor_exercise')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
-              <ScoreInput
-                label="Pommel Horse"
-                name="pommel_horse"
-                initVal={getScore('pommel_horse')}
-                initPlace={getPlace('pommel_horse')}
-                initSV={getSV('pommel_horse')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
-              <ScoreInput
-                label="Still Rings"
-                name="still_rings"
-                initVal={getScore('still_rings')}
-                initPlace={getPlace('still_rings')}
-                initSV={getSV('still_rings')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
-              <ScoreInput
-                label="Vault"
-                name="vault"
-                initVal={getScore('vault')}
-                initPlace={getPlace('vault')}
-                initSV={getSV('vault')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
-              <ScoreInput
-                label="Parallel Bars"
-                name="parallel_bars"
-                initVal={getScore('parallel_bars')}
-                initPlace={getPlace('parallel_bars')}
-                initSV={getSV('parallel_bars')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
-              <ScoreInput
-                label="High Bar"
-                name="high_bar"
-                initVal={getScore('high_bar')}
-                initPlace={getPlace('high_bar')}
-                initSV={getSV('high_bar')}
-                showSV={showSV}
-                showPlace={showPlace}
-              />
+              {apparatuses.map((apparatus) => (
+                <ScoreInput
+                  key={apparatus}
+                  label={displayApparatus(apparatus)}
+                  name={apparatus}
+                  initVal={getScore(apparatus)}
+                  initPlace={getPlace(apparatus)}
+                  initSV={getSV(apparatus)}
+                  showSV={showSV}
+                  showPlace={showPlace}
+                />
+              ))}
             </div>
           </div>
 
@@ -289,9 +255,9 @@ function ScoreInput({
 }: {
   label: string;
   name: string;
-  initVal: any;
-  initPlace: any;
-  initSV: any;
+  initVal: number | string;
+  initPlace: number | string;
+  initSV: number | string;
   showSV: boolean;
   showPlace: boolean;
 }) {

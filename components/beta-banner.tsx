@@ -1,24 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 
 export function BetaBanner() {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const dismissed = localStorage.getItem('gymnast_beta_banner_dismissed');
-    if (!dismissed) {
-      setIsVisible(true);
-    }
-  }, []);
+  const isVisible = useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener('storage', onChange);
+      window.addEventListener('gymnast-beta-dismissed', onChange);
+      return () => {
+        window.removeEventListener('storage', onChange);
+        window.removeEventListener('gymnast-beta-dismissed', onChange);
+      };
+    },
+    () => localStorage.getItem('gymnast_beta_banner_dismissed') !== 'true',
+    () => false
+  );
 
   const handleDismiss = () => {
     localStorage.setItem('gymnast_beta_banner_dismissed', 'true');
-    setIsVisible(false);
+    window.dispatchEvent(new Event('gymnast-beta-dismissed'));
   };
 
   if (!isVisible) return null;

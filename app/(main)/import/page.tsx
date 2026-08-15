@@ -16,9 +16,14 @@ export default async function ImportPage() {
 
   const { data: gymnast } = await supabase
     .from('gymnasts')
-    .select('mso_id')
+    .select('name, mso_id')
     .eq('id', activeGymnastId)
     .single();
 
-  return <ImportView initialMsoId={gymnast?.mso_id} />;
+  return (
+    <ImportView
+      gymnastName={gymnast?.name || 'this gymnast'}
+      initialMsoId={gymnast?.mso_id}
+    />
+  );
 }

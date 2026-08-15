@@ -85,3 +85,21 @@
     -moz-appearance: textfield;
   }
 }
+
+@media print {
+  .no-print,
+  header,
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+
+  body,
+  main {
+    background: white !important;
+  }
+
+  .shadow-sm,
+  .shadow-md {
+    box-shadow: none !important;
+  }
+}

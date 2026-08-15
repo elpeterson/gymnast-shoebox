@@ -17,7 +17,7 @@ export default async function AboutPage() {
 
   try {
     content = fs.readFileSync(filePath, 'utf8');
-  } catch (error) {
+  } catch {
     content = '# Error\nCould not load README file.';
   }
 
@@ -52,7 +52,7 @@ export default async function AboutPage() {
             </p>
             <p>
               <strong>Gymnast Shoebox</strong> is designed to be the digital
-              home for your gymnast's scores. I hope it helps you enjoy the
+              home for your gymnast’s scores. I hope it helps you enjoy the
               meets a little more without worrying about losing the data.
             </p>
 
