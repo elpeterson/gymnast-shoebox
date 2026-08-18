@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { BetaBanner } from '@/components/beta-banner';
 import { ensureActiveGymnast } from '@/app/actions/gymnast';
-import { CloudDownload, LineChart } from 'lucide-react';
+import { CloudDownload } from 'lucide-react';
 import { CompetitionList } from '@/components/competition-list';
 import { COMPETITIONS_PAGE_SIZE } from '@/lib/constants';
 
@@ -45,12 +45,6 @@ export default async function Dashboard() {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Score History</h2>
         <div className="flex gap-3">
-          <Button asChild variant="outline">
-            <Link href="/insights">
-              <LineChart className="mr-2 h-4 w-4" />
-              Consistency
-            </Link>
-          </Button>
           <Button asChild variant="outline">
             <Link href="/import">
               <CloudDownload className="mr-2 h-4 w-4" />
