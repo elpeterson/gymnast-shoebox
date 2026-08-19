@@ -1,0 +1,426 @@
+{
+ "results": [
+  {
+   "ProjectID": "Gymnast",
+   "QueryID": "lookup_gymnast",
+   "parameters": {
+    "LookupIndex": "1",
+    "p_DisciplineType": "1",
+    "p_DisciplineTypeOther": "",
+    "p_gymnastid": "539672",
+    "p_usagnum": "",
+    "p_season": "",
+    "p_aascore": "37",
+    "p_level": "10"
+   },
+   "paging": {
+    "pages": {
+     "page": [
+      {
+       "from": 1,
+       "to": 44,
+       "value": 1
+      }
+     ],
+     "current": 1,
+     "totalrecords": 0,
+     "totalpages": 1
+    },
+    "limit": 1000,
+    "direction": 4
+   },
+   "fields": [
+    {
+     "field": "gymnastid",
+     "gymnastid": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "meetid",
+     "meetid": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "scoresid",
+     "scoresid": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "usagnum",
+     "usagnum": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "hasPin",
+     "hasPin": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "first_name",
+     "first_name": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "last_name",
+     "last_name": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "fullname",
+     "fullname": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "gender",
+     "gender": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "dob",
+     "dob": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "sess",
+     "sess": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "div",
+     "div": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "current_level",
+     "current_level": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "HomeTown",
+     "HomeTown": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "Country",
+     "Country": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "gym",
+     "gym": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "meetname",
+     "meetname": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "meetdate_monthyear",
+     "meetdate_monthyear": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "Season",
+     "Season": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "level",
+     "level": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "AAScore",
+     "AAScore": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "AAPlace",
+     "AAPlace": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "encoded_gym",
+     "encoded_gym": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "encoded_sess",
+     "encoded_sess": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "encoded_level",
+     "encoded_level": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "encoded_div",
+     "encoded_div": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "encoded_meetname",
+     "encoded_meetname": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "isolated",
+     "isolated": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "NameMisMatch",
+     "NameMisMatch": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "MissingDOB",
+     "MissingDOB": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "DOBMisMatch",
+     "DOBMisMatch": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "isolated_DOB",
+     "isolated_DOB": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "isolated_full_name",
+     "isolated_full_name": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "MeetWeeks",
+     "MeetWeeks": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    }
+   ],
+   "result": {
+    "row": [
+     {
+      "gymnastid": "1001",
+      "meetid": "36935",
+      "scoresid": "55576302",
+      "usagnum": "",
+      "hasPin": "0",
+      "first_name": "Test",
+      "last_name": "Gymnast",
+      "fullname": "Test Gymnast",
+      "gender": "",
+      "dob": "",
+      "sess": "1M",
+      "div": "Junior 16",
+      "current_level": "42",
+      "HomeTown": "",
+      "Country": "",
+      "gym": "ZnZ Gym",
+      "meetname": "2026 U.S. Championships - Men Day 1",
+      "meetdate_monthyear": "8-26",
+      "Season": "2026-2027",
+      "level": "J6",
+      "AAScore": "0.00000",
+      "AAPlace": "",
+      "encoded_gym": "ZnZ%20Gym",
+      "encoded_sess": "1M",
+      "encoded_level": "J6",
+      "encoded_div": "Junior%2016",
+      "encoded_meetname": "2026%20U.S.%20Championships%20-%20Men%20Day%201",
+      "isolated": "0",
+      "NameMisMatch": "0",
+      "MissingDOB": "0",
+      "DOBMisMatch": "0",
+      "isolated_DOB": "",
+      "isolated_full_name": "",
+      "MeetWeeks": "9"
+     },
+     {
+      "gymnastid": "1001",
+      "meetid": "36767",
+      "scoresid": "55101415",
+      "usagnum": "",
+      "hasPin": "0",
+      "first_name": "Test",
+      "last_name": "Gymnast",
+      "fullname": "Test Gymnast",
+      "gender": "",
+      "dob": "",
+      "sess": "2J",
+      "div": "16 yrs",
+      "current_level": "42",
+      "HomeTown": "",
+      "Country": "",
+      "gym": "ZnZ Gym NE",
+      "meetname": "2026 Men's Dev Nationals Main",
+      "meetdate_monthyear": "5-26",
+      "Season": "2025-2026",
+      "level": "10J",
+      "AAScore": "71.2500",
+      "AAPlace": "14T",
+      "encoded_gym": "ZnZ%20Gym%20NE",
+      "encoded_sess": "2J",
+      "encoded_level": "10J",
+      "encoded_div": "16%20yrs",
+      "encoded_meetname": "2026%20Men%27s%20Dev%20Nationals%20Main",
+      "isolated": "0",
+      "NameMisMatch": "0",
+      "MissingDOB": "0",
+      "DOBMisMatch": "0",
+      "isolated_DOB": "",
+      "isolated_full_name": "",
+      "MeetWeeks": "48"
+     },
+     {
+      "gymnastid": "1001",
+      "meetid": "36770",
+      "scoresid": "55292302",
+      "usagnum": "",
+      "hasPin": "0",
+      "first_name": "Test",
+      "last_name": "Gymnast",
+      "fullname": "Test Gymnast",
+      "gender": "",
+      "dob": "",
+      "sess": "8J",
+      "div": "16 yrs",
+      "current_level": "42",
+      "HomeTown": "",
+      "Country": "",
+      "gym": "ZnZ Gym NE",
+      "meetname": "2026 Men's Dev Nats JE 10 Day 2",
+      "meetdate_monthyear": "5-26",
+      "Season": "2025-2026",
+      "level": "10J",
+      "AAScore": "73.3520",
+      "AAPlace": "10",
+      "encoded_gym": "ZnZ%20Gym%20NE",
+      "encoded_sess": "8J",
+      "encoded_level": "10J",
+      "encoded_div": "16%20yrs",
+      "encoded_meetname": "2026%20Men%27s%20Dev%20Nats%20JE%2010%20Day%202",
+      "isolated": "0",
+      "NameMisMatch": "0",
+      "MissingDOB": "0",
+      "DOBMisMatch": "0",
+      "isolated_DOB": "",
+      "isolated_full_name": "",
+      "MeetWeeks": "48"
+     }
+    ]
+   },
+   "subquery": {
+    "result": {
+     "row": []
+    }
+   },
+   "subresults": []
+  }
+ ]
+}
