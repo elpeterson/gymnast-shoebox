@@ -114,13 +114,17 @@ const ARTM_SLOTS: Record<number, string> = {
 };
 
 /**
- * MSO encodes Development Program level and division together in one `level`
- * string, e.g. "4D1" = Level 4, Division 1. Split it into the two fields the
- * app stores separately. Elite/other codes (e.g. "J6", "SR") have no D-suffix
- * and are returned as-is with a null division.
+ * MSO packs a men's competitive category into the one `level` string, in a few
+ * shapes. Split it into the separate level + division the app stores:
+ *
+ *   "4D1"  → level 4, division 1   (Development Program: level N, division 1/2)
+ *   "10J"  → level 10, division J  (optional levels: Elite/Junior/Senior track)
+ *   "6E"   → level 6, division E
+ *   "10"   → level 10, no division (plain)
+ *   "E","J6","SR","PL" → kept as the level, no division (elite/special codes)
  *
  * Note: MSO's separate `div` field is an *age group* ("Child B", "Jr"), not the
- * competitive 1/2 division, so it is deliberately not used for `division`.
+ * competitive division, so it is deliberately not used here.
  */
 export function parseMsoLevel(raw: string | undefined): {
   level: string | null;
@@ -128,8 +132,10 @@ export function parseMsoLevel(raw: string | undefined): {
 } {
   const s = (raw ?? '').trim();
   if (!s) return { level: null, division: null };
-  const m = s.match(/^(\d+)[dD](\d+)$/);
-  if (m) return { level: m[1], division: m[2] };
+  const dp = s.match(/^(\d+)[dD](\d+)$/);
+  if (dp) return { level: dp[1], division: dp[2] };
+  const track = s.match(/^(\d+)([EJS])$/);
+  if (track) return { level: track[1], division: track[2] };
   return { level: s, division: null };
 }
 

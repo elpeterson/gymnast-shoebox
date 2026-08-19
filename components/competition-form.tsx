@@ -27,11 +27,12 @@ import {
   MAG_APPARATUS,
   WAG_APPARATUS,
   LEVEL_OPTIONS,
-  DIVISION_OPTIONS,
+  ELITE_LEVEL_OPTIONS,
+  qualifierForLevel,
 } from '@/lib/constants';
 
-// Sentinel for the "no division" choice — Radix Select items cannot use "".
-const NO_DIVISION = 'none';
+// Sentinel for the "none" choice — Radix Select items cannot use "".
+const NONE_VALUE = 'none';
 
 interface CompetitionFormProps {
   initialData?: {
@@ -68,12 +69,25 @@ export function CompetitionForm({
   const [division, setDivision] = useState(initialData?.division ?? '');
   const isWAG = discipline === 'WAG';
 
-  // Preserve a pre-existing level that isn't one of the standard options
-  // (e.g. an Xcel or MSO-imported value) so editing never silently drops it.
-  const levelOptions =
-    level && !LEVEL_OPTIONS.includes(level)
-      ? [level, ...LEVEL_OPTIONS]
-      : LEVEL_OPTIONS;
+  // Men's level dropdown: numeric levels + elite/special codes. Any pre-existing
+  // value not in those sets (e.g. an imported oddity) is preserved as an option
+  // so editing never silently drops it.
+  const knownLevels = [
+    ...LEVEL_OPTIONS,
+    ...ELITE_LEVEL_OPTIONS.map((o) => o.value),
+  ];
+  const extraLevel =
+    level && !knownLevels.includes(level) ? [level] : [];
+
+  // The division/track field is context-aware: 1/2 for compulsory levels,
+  // Elite/Junior/Senior for optional levels, hidden otherwise. A pre-existing
+  // value outside the set is preserved as an option.
+  const qualifier = qualifierForLevel(level);
+  const qualifierOptions =
+    division && !qualifier.options.some((o) => o.value === division)
+      ? [{ value: division, label: division }, ...qualifier.options]
+      : qualifier.options;
+  const showQualifier = !isWAG && qualifierOptions.length > 0;
 
   const handleSubmit = async (formData: FormData) => {
     startTransition(async () => {
@@ -148,9 +162,11 @@ export function CompetitionForm({
             </div>
 
             {/*
-              Men's uses fixed dropdowns (Level 3-10, Division 1/2). Women's
-              keeps free-text so Xcel levels and women's divisions aren't
-              forced into the men's vocabulary — the graph partitions on
+              Men's uses dropdowns that mirror MSO's real level values: numeric
+              levels 3-10 plus elite/special codes, and a context-aware second
+              field (Division 1/2 for compulsory levels, Elite/Junior/Senior
+              track for optional levels). Women's keeps free text so Xcel levels
+              aren't forced into the men's vocabulary — the graph partitions on
               whatever strings are entered either way.
             */}
             <div className="grid w-full items-center gap-1.5">
@@ -164,14 +180,30 @@ export function CompetitionForm({
                   placeholder="e.g. Level 4 or Gold"
                 />
               ) : (
-                <Select value={level} onValueChange={setLevel}>
+                <Select
+                  value={level}
+                  onValueChange={(v) => {
+                    setLevel(v);
+                    setDivision(''); // reset qualifier when the level changes
+                  }}
+                >
                   <SelectTrigger id="level">
                     <SelectValue placeholder="Select level" />
                   </SelectTrigger>
                   <SelectContent>
-                    {levelOptions.map((l) => (
+                    {extraLevel.map((l) => (
                       <SelectItem key={l} value={l}>
-                        {LEVEL_OPTIONS.includes(l) ? `Level ${l}` : l}
+                        {l}
+                      </SelectItem>
+                    ))}
+                    {LEVEL_OPTIONS.map((l) => (
+                      <SelectItem key={l} value={l}>
+                        Level {l}
+                      </SelectItem>
+                    ))}
+                    {ELITE_LEVEL_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -179,9 +211,9 @@ export function CompetitionForm({
               )}
             </div>
 
-            <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="division">Division (Optional)</Label>
-              {isWAG ? (
+            {isWAG ? (
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="division">Division (Optional)</Label>
                 <Input
                   type="text"
                   id="division"
@@ -189,27 +221,34 @@ export function CompetitionForm({
                   onChange={(e) => setDivision(e.target.value)}
                   placeholder="Optional"
                 />
-              ) : (
+              </div>
+            ) : showQualifier ? (
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="division">{qualifier.label} (Optional)</Label>
                 <Select
-                  value={division || NO_DIVISION}
+                  value={division || NONE_VALUE}
                   onValueChange={(v) =>
-                    setDivision(v === NO_DIVISION ? '' : v)
+                    setDivision(v === NONE_VALUE ? '' : v)
                   }
                 >
                   <SelectTrigger id="division">
-                    <SelectValue placeholder="No division" />
+                    <SelectValue placeholder={`No ${qualifier.label.toLowerCase()}`} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NO_DIVISION}>No division</SelectItem>
-                    {DIVISION_OPTIONS.map((d) => (
-                      <SelectItem key={d} value={d}>
-                        Division {d}
+                    <SelectItem value={NONE_VALUE}>
+                      No {qualifier.label.toLowerCase()}
+                    </SelectItem>
+                    {qualifierOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="hidden sm:block" aria-hidden="true" />
+            )}
 
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="all_around_place">AA Place (Optional)</Label>

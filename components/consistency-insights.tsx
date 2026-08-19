@@ -15,7 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MAG_APPARATUS, WAG_APPARATUS, LEVEL_OPTIONS } from '@/lib/constants';
+import {
+  MAG_APPARATUS,
+  WAG_APPARATUS,
+  LEVEL_OPTIONS,
+  ELITE_LEVEL_OPTIONS,
+  TRACK_OPTIONS,
+} from '@/lib/constants';
 import {
   apparatusWithData,
   buildSeries,
@@ -31,9 +37,16 @@ interface ConsistencyInsightsProps {
   discipline: string;
 }
 
-/** Show "Level 4" for a bare number, otherwise the raw value (e.g. imported). */
+/** Show "Level 4" for a bare number, or the friendly elite/special name. */
 function levelLabel(value: string): string {
-  return LEVEL_OPTIONS.includes(value) ? `Level ${value}` : value;
+  if (LEVEL_OPTIONS.includes(value)) return `Level ${value}`;
+  return ELITE_LEVEL_OPTIONS.find((o) => o.value === value)?.label ?? value;
+}
+
+/** Friendly name for a division/track value: "1"/"2" or Elite/Junior/Senior. */
+function divisionLabel(value: string): string {
+  if (value === '1' || value === '2') return `Division ${value}`;
+  return TRACK_OPTIONS.find((o) => o.value === value)?.label ?? value;
 }
 
 export function ConsistencyInsights({
@@ -134,7 +147,7 @@ export function ConsistencyInsights({
                 <SelectContent>
                   {divisions.map((d) => (
                     <SelectItem key={d.value} value={d.value}>
-                      {d.value}
+                      {divisionLabel(d.value)}
                       <span className="ml-1 text-muted-foreground">
                         ({d.count})
                       </span>

@@ -50,9 +50,18 @@ describe('parseMsoLevel', () => {
     expect(parseMsoLevel('4d1')).toEqual({ level: '4', division: '1' });
   });
 
-  it('keeps non-DP codes as the level with no division', () => {
+  it('splits the optional-level E/J/S track suffix into a division', () => {
+    expect(parseMsoLevel('10J')).toEqual({ level: '10', division: 'J' });
+    expect(parseMsoLevel('10S')).toEqual({ level: '10', division: 'S' });
+    expect(parseMsoLevel('9E')).toEqual({ level: '9', division: 'E' });
+    expect(parseMsoLevel('6E')).toEqual({ level: '6', division: 'E' });
+  });
+
+  it('keeps non-numeric codes as the level with no division', () => {
     expect(parseMsoLevel('J6')).toEqual({ level: 'J6', division: null });
     expect(parseMsoLevel('SR')).toEqual({ level: 'SR', division: null });
+    expect(parseMsoLevel('E')).toEqual({ level: 'E', division: null });
+    expect(parseMsoLevel('PL')).toEqual({ level: 'PL', division: null });
     expect(parseMsoLevel('7')).toEqual({ level: '7', division: null });
   });
 
