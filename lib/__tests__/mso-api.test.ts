@@ -5,6 +5,8 @@ import {
   extractRows,
   parseGymnastMeets,
   parseMeetResult,
+  parseMsoLevel,
+  unixToIsoDate,
   ARTM_SLOTS,
 } from '../mso-api';
 
@@ -41,26 +43,57 @@ describe('extractRows', () => {
   });
 });
 
+describe('parseMsoLevel', () => {
+  it('splits the Development Program "4D1" encoding into level + division', () => {
+    expect(parseMsoLevel('4D1')).toEqual({ level: '4', division: '1' });
+    expect(parseMsoLevel('10D2')).toEqual({ level: '10', division: '2' });
+    expect(parseMsoLevel('4d1')).toEqual({ level: '4', division: '1' });
+  });
+
+  it('keeps non-DP codes as the level with no division', () => {
+    expect(parseMsoLevel('J6')).toEqual({ level: 'J6', division: null });
+    expect(parseMsoLevel('SR')).toEqual({ level: 'SR', division: null });
+    expect(parseMsoLevel('7')).toEqual({ level: '7', division: null });
+  });
+
+  it('maps blank to nulls', () => {
+    expect(parseMsoLevel('')).toEqual({ level: null, division: null });
+    expect(parseMsoLevel(undefined)).toEqual({ level: null, division: null });
+  });
+});
+
+describe('unixToIsoDate', () => {
+  it('converts an MSO UNIX_TIME to an ISO date', () => {
+    expect(unixToIsoDate('1774483200')).toBe('2026-03-26');
+  });
+  it('returns null for empty or bad input', () => {
+    expect(unixToIsoDate('')).toBeNull();
+    expect(unixToIsoDate('0')).toBeNull();
+    expect(unixToIsoDate('abc')).toBeNull();
+  });
+});
+
 describe('parseGymnastMeets', () => {
-  it('captures level and division per meet — the fields the scrape drops', () => {
+  it('captures split level and division per meet — the fields the scrape drops', () => {
     const meets = parseGymnastMeets(extractRows(gymnastEnvelope));
     expect(meets.length).toBeGreaterThan(0);
     const first = meets[0];
     expect(first.meetId).toBeTruthy();
-    expect(first.level).toBe('J6');
-    expect(first.division).toBe('Junior 16');
+    // Fixture level is the DP "4D1" encoding -> split.
+    expect(first.level).toBe('4');
+    expect(first.division).toBe('1');
   });
 
   it('de-duplicates repeated meet ids', () => {
     const rows = [
-      { meetid: '10', meetname: 'A', level: 'J6', div: 'Junior 16' },
-      { meetid: '10', meetname: 'A', level: 'J6', div: 'Junior 16' },
-      { meetid: '11', meetname: 'B', level: 'J7', div: 'Junior 17' },
+      { meetid: '10', meetname: 'A', level: '4D1', div: 'Child B' },
+      { meetid: '10', meetname: 'A', level: '4D1', div: 'Child B' },
+      { meetid: '11', meetname: 'B', level: '5D2', div: 'Jr' },
     ];
     expect(parseGymnastMeets(rows).map((m) => m.meetId)).toEqual(['10', '11']);
   });
 
-  it('normalizes blank level/division to null', () => {
+  it('normalizes blank level to null', () => {
     const meets = parseGymnastMeets([
       { meetid: '1', meetname: 'X', level: '  ', div: '' },
     ]);
@@ -75,8 +108,9 @@ describe('parseMeetResult', () => {
     const result = parseMeetResult(extractRows(scoresEnvelope), '1001');
     expect(result).not.toBeNull();
     expect(result!.isMens).toBe(true);
-    expect(result!.level).toBe('J6');
-    expect(result!.division).toBe('Junior 16');
+    expect(result!.level).toBe('4');
+    expect(result!.division).toBe('1');
+    expect(result!.date).toBe('2026-03-26'); // from UNIX_TIME
 
     const byApp = Object.fromEntries(
       result!.scores.map((s) => [s.apparatus, s.value])
@@ -100,7 +134,8 @@ describe('parseMeetResult', () => {
     expect(result!.scores).toHaveLength(0);
     expect(result!.allAroundScore).toBeNull();
     // Level/division are still captured even when the meet isn't scored.
-    expect(result!.level).toBe('J6');
+    expect(result!.level).toBe('4');
+    expect(result!.division).toBe('1');
   });
 
   it('parses tie place markers', () => {

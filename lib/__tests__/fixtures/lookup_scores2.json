@@ -536,8 +536,8 @@
       "gym": "Mini-Hops",
       "clubnum": "23262",
       "sess": "1M",
-      "level": "J6",
-      "div": "Junior 16",
+      "level": "4D1",
+      "div": "Child B",
       "EventType": "ARTM",
       "EventScore1": "12.400000",
       "EventScore2": "11.994000",
@@ -579,7 +579,7 @@
       "isolated": "0",
       "hasBio": "False",
       "MeetDate": "",
-      "UNIX_TIME": "1785974400"
+      "UNIX_TIME": "1774483200"
      },
      {
       "scoresid": "55576302",
@@ -598,8 +598,8 @@
       "gym": "ZnZ Gym",
       "clubnum": "932436",
       "sess": "1M",
-      "level": "J6",
-      "div": "Junior 16",
+      "level": "4D1",
+      "div": "Child B",
       "EventType": "ARTM",
       "EventScore1": "0.000000",
       "EventScore2": "0.000000",
@@ -641,7 +641,7 @@
       "isolated": "0",
       "hasBio": "False",
       "MeetDate": "",
-      "UNIX_TIME": "1785974400"
+      "UNIX_TIME": "1774483200"
      }
     ]
    },

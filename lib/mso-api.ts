@@ -114,6 +114,34 @@ const ARTM_SLOTS: Record<number, string> = {
 };
 
 /**
+ * MSO encodes Development Program level and division together in one `level`
+ * string, e.g. "4D1" = Level 4, Division 1. Split it into the two fields the
+ * app stores separately. Elite/other codes (e.g. "J6", "SR") have no D-suffix
+ * and are returned as-is with a null division.
+ *
+ * Note: MSO's separate `div` field is an *age group* ("Child B", "Jr"), not the
+ * competitive 1/2 division, so it is deliberately not used for `division`.
+ */
+export function parseMsoLevel(raw: string | undefined): {
+  level: string | null;
+  division: string | null;
+} {
+  const s = (raw ?? '').trim();
+  if (!s) return { level: null, division: null };
+  const m = s.match(/^(\d+)[dD](\d+)$/);
+  if (m) return { level: m[1], division: m[2] };
+  return { level: s, division: null };
+}
+
+/** Convert MSO's UNIX_TIME (seconds) to an ISO `YYYY-MM-DD` date, or null. */
+export function unixToIsoDate(unix: string | undefined): string | null {
+  if (!unix) return null;
+  const secs = Number(unix);
+  if (!Number.isFinite(secs) || secs <= 0) return null;
+  return new Date(secs * 1000).toISOString().slice(0, 10);
+}
+
+/**
  * Parse a numeric MSO score string. Empty, non-numeric, and exactly zero all
  * map to null: MSO uses `0.000000` to mean "not yet scored", and a real
  * gymnastics score is never 0, so a zero must not enter an average or a chart.
@@ -144,11 +172,12 @@ export function parseGymnastMeets(
     const meetId = r.meetid?.trim();
     if (!meetId || seen.has(meetId)) continue;
     seen.add(meetId);
+    const { level, division } = parseMsoLevel(r.level);
     out.push({
       meetId,
       meetName: r.meetname ?? '',
-      level: r.level?.trim() || null,
-      division: r.div?.trim() || null,
+      level,
+      division,
       monthYear: r.meetdate_monthyear?.trim() || null,
     });
   }
@@ -168,6 +197,7 @@ export type MsoMeetResult = {
   meetName: string;
   level: string | null;
   division: string | null;
+  date: string | null;
   isMens: boolean;
   scores: MsoApparatusScore[];
   allAroundScore: number | null;
@@ -206,12 +236,14 @@ export function parseMeetResult(
     }
   }
 
+  const { level, division } = parseMsoLevel(r.level);
   return {
     gymnastId,
     meetId: r.meetid ?? '',
     meetName: r.MeetName ?? '',
-    level: r.level?.trim() || null,
-    division: r.div?.trim() || null,
+    level,
+    division,
+    date: unixToIsoDate(r.UNIX_TIME),
     isMens,
     scores,
     allAroundScore: num(r.AAScore),
