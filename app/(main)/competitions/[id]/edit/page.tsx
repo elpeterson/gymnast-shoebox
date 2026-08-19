@@ -20,6 +20,19 @@ export default async function EditCompetitionPage({
     redirect('/dashboard');
   }
 
+  // `division` may not be exposed by the view yet; read it from the base table
+  // so the edit form prefills it and does not blank it out on save.
+  const { data: base } = await supabase
+    .from('competitions')
+    .select('division')
+    .eq('id', id)
+    .single();
+
+  const initialData = {
+    ...competition,
+    division: competition.division ?? base?.division ?? null,
+  };
+
   const { data: gymnast } = await supabase
     .from('gymnasts')
     .select('discipline')
@@ -29,7 +42,7 @@ export default async function EditCompetitionPage({
   return (
     <div className="max-w-2xl mx-auto py-10">
       <CompetitionForm
-        initialData={competition}
+        initialData={initialData}
         discipline={gymnast?.discipline || 'MAG'}
       />
     </div>

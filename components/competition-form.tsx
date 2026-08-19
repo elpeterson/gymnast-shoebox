@@ -25,6 +25,7 @@ interface CompetitionFormProps {
     start_date: string | null;
     end_date: string | null;
     level: string | null;
+    division: string | null;
     all_around_place: number | null;
     show_start_value: boolean;
     show_place: boolean;
@@ -69,7 +70,7 @@ export function CompetitionForm({
           router.push('/dashboard');
           router.refresh();
         }
-      } catch (e) {
+      } catch {
         toast.error('An unexpected error occurred.');
       }
     });
@@ -127,6 +128,17 @@ export function CompetitionForm({
                 id="level"
                 placeholder="e.g. Level 4"
                 defaultValue={initialData?.level || ''}
+              />
+            </div>
+
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="division">Division (Optional)</Label>
+              <Input
+                type="text"
+                name="division"
+                id="division"
+                placeholder="e.g. 4D1"
+                defaultValue={initialData?.division || ''}
               />
             </div>
 
