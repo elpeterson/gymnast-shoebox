@@ -17,18 +17,18 @@ import {
 } from '@/components/ui/chart';
 import type { ChartRow } from '@/lib/insights';
 
-// Distinct, theme-legible color per apparatus. Mirrors the RoadToNationals
-// palette (teal floor, orange pommel, green rings, violet vault, amber pbars,
-// slate high bar) and adds sky/pink for the women's-only apparatus.
+// One distinct hue per apparatus, resolved from the CSS variables defined in
+// globals.css so each has a light/dark variant. Floor (blue) and Rings (green)
+// are now clearly different.
 const APPARATUS_COLORS: Record<string, string> = {
-  floor_exercise: '#14b8a6',
-  pommel_horse: '#f97316',
-  still_rings: '#22c55e',
-  vault: '#8b5cf6',
-  parallel_bars: '#f59e0b',
-  high_bar: '#64748b',
-  uneven_bars: '#0ea5e9',
-  balance_beam: '#ec4899',
+  floor_exercise: 'hsl(var(--chart-floor))',
+  pommel_horse: 'hsl(var(--chart-pommel))',
+  still_rings: 'hsl(var(--chart-rings))',
+  vault: 'hsl(var(--chart-vault))',
+  parallel_bars: 'hsl(var(--chart-pbars))',
+  high_bar: 'hsl(var(--chart-highbar))',
+  uneven_bars: 'hsl(var(--chart-ubars))',
+  balance_beam: 'hsl(var(--chart-beam))',
 };
 
 const MONTHS = [

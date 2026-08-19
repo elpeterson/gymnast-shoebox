@@ -12,11 +12,26 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import { createScore, updateCompetition } from '@/app/(main)/scores/actions';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { MAG_APPARATUS, WAG_APPARATUS } from '@/lib/constants';
+import {
+  MAG_APPARATUS,
+  WAG_APPARATUS,
+  LEVEL_OPTIONS,
+  DIVISION_OPTIONS,
+} from '@/lib/constants';
+
+// Sentinel for the "no division" choice — Radix Select items cannot use "".
+const NO_DIVISION = 'none';
 
 interface CompetitionFormProps {
   initialData?: {
@@ -49,6 +64,15 @@ export function CompetitionForm({
 
   const [showSV, setShowSV] = useState(initialData?.show_start_value ?? false);
   const [showPlace, setShowPlace] = useState(initialData?.show_place ?? true);
+  const [level, setLevel] = useState(initialData?.level ?? '');
+  const [division, setDivision] = useState(initialData?.division ?? '');
+
+  // Preserve a pre-existing level that isn't one of the standard options
+  // (e.g. an Xcel or MSO-imported value) so editing never silently drops it.
+  const levelOptions =
+    level && !LEVEL_OPTIONS.includes(level)
+      ? [level, ...LEVEL_OPTIONS]
+      : LEVEL_OPTIONS;
 
   const handleSubmit = async (formData: FormData) => {
     startTransition(async () => {
@@ -106,6 +130,8 @@ export function CompetitionForm({
 
           <input type="hidden" name="show_start_value" value={String(showSV)} />
           <input type="hidden" name="show_place" value={String(showPlace)} />
+          <input type="hidden" name="level" value={level} />
+          <input type="hidden" name="division" value={division} />
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div className="grid w-full items-center gap-1.5 sm:col-span-2">
@@ -122,24 +148,40 @@ export function CompetitionForm({
 
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="level">Level (Optional)</Label>
-              <Input
-                type="text"
-                name="level"
-                id="level"
-                placeholder="e.g. Level 4"
-                defaultValue={initialData?.level || ''}
-              />
+              <Select value={level} onValueChange={setLevel}>
+                <SelectTrigger id="level">
+                  <SelectValue placeholder="Select level" />
+                </SelectTrigger>
+                <SelectContent>
+                  {levelOptions.map((l) => (
+                    <SelectItem key={l} value={l}>
+                      {LEVEL_OPTIONS.includes(l) ? `Level ${l}` : l}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="division">Division (Optional)</Label>
-              <Input
-                type="text"
-                name="division"
-                id="division"
-                placeholder="e.g. 4D1"
-                defaultValue={initialData?.division || ''}
-              />
+              <Select
+                value={division || NO_DIVISION}
+                onValueChange={(v) =>
+                  setDivision(v === NO_DIVISION ? '' : v)
+                }
+              >
+                <SelectTrigger id="division">
+                  <SelectValue placeholder="No division" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_DIVISION}>No division</SelectItem>
+                  {DIVISION_OPTIONS.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      Division {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid w-full items-center gap-1.5">

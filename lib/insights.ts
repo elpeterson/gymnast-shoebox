@@ -1,10 +1,14 @@
 // Individual Consistency analytics.
 //
 // Pure, dependency-free transforms that turn a gymnast's competitions into the
-// row shape a multi-series line chart consumes. The load-bearing rule from the
-// product plan lives here: scores are partitioned by *division* and never
-// mixed across divisions (a 4D1 score is not comparable to a 5D2 score), so the
-// chart only ever renders one division at a time.
+// row shape a multi-series line chart consumes.
+//
+// The load-bearing rule from the product plan: scores are not comparable across
+// competitive groups, so the chart only ever shows ONE group at a time. The
+// group is defined by (Level, Division): Level always partitions (a Level 3
+// score is not comparable to a Level 6 score), and Division sub-partitions
+// within a level when a gym uses divisions (4D1 vs 5D2). A level with no
+// divisions is graphed whole.
 
 export type ScoreItem = {
   apparatus: string;
@@ -15,6 +19,7 @@ export type CompetitionRow = {
   id: string;
   name: string;
   start_date: string | null;
+  level: string | null;
   division: string | null;
   scores: ScoreItem[];
 };
@@ -28,20 +33,28 @@ export type ChartRow = {
   [apparatusId: string]: string | number | null;
 };
 
-export type DivisionOption = {
-  division: string;
+export type GroupOption = {
+  value: string;
   count: number;
-  /** Latest competition date in this division, for sorting/most-recent default. */
+  /** Latest competition date in this group, for most-recent-first ordering. */
   latest: string | null;
 };
 
-/** Label used for competitions that have no division recorded. */
-export const UNSPECIFIED_DIVISION = 'Unspecified';
+/** Label for competitions with no level recorded. */
+export const UNSPECIFIED_LEVEL = 'Unspecified';
+/** Label for competitions within a level that have no division. */
+export const NO_DIVISION = 'No division';
+
+/** The level bucket a competition belongs to, normalizing blanks. */
+export function levelKey(comp: Pick<CompetitionRow, 'level'>): string {
+  const l = comp.level?.trim();
+  return l ? l : UNSPECIFIED_LEVEL;
+}
 
 /** The division bucket a competition belongs to, normalizing blanks. */
 export function divisionKey(comp: Pick<CompetitionRow, 'division'>): string {
   const d = comp.division?.trim();
-  return d ? d : UNSPECIFIED_DIVISION;
+  return d ? d : NO_DIVISION;
 }
 
 /**
@@ -55,50 +68,73 @@ function compareDateAsc(a: string | null, b: string | null): number {
   return a < b ? -1 : 1;
 }
 
-/**
- * Distinct divisions present in the gymnast's competitions, most-recent first,
- * so the filter can default to the division they are currently competing in.
- */
-export function listDivisions(competitions: CompetitionRow[]): DivisionOption[] {
-  const map = new Map<string, DivisionOption>();
-
+function tally(
+  competitions: CompetitionRow[],
+  keyOf: (c: CompetitionRow) => string
+): GroupOption[] {
+  const map = new Map<string, GroupOption>();
   for (const comp of competitions) {
-    const key = divisionKey(comp);
-    const existing = map.get(key);
+    const value = keyOf(comp);
+    const existing = map.get(value);
     if (existing) {
       existing.count += 1;
       if (compareDateAsc(existing.latest, comp.start_date) < 0) {
         existing.latest = comp.start_date;
       }
     } else {
-      map.set(key, { division: key, count: 1, latest: comp.start_date });
+      map.set(value, { value, count: 1, latest: comp.start_date });
     }
   }
-
+  // Most recent first, so the filter defaults to the current group.
   return [...map.values()].sort((a, b) => {
-    // Most recent first; a division with any dated meet beats an all-undated one.
     const byDate = compareDateAsc(b.latest, a.latest);
     if (byDate !== 0) return byDate;
-    return a.division.localeCompare(b.division);
+    return a.value.localeCompare(b.value, undefined, { numeric: true });
   });
 }
 
-/**
- * Rows for the line chart, restricted to a single division and ordered oldest
- * to newest. Each row carries one competition's date and its score on every
- * requested apparatus (null where a score is missing), which is exactly the
- * shape a shared hover tooltip needs to list every event for a date.
- *
- * `apparatusIds` controls which apparatus (and their order) appear, so the
- * caller drives discipline-specific layout (MAG vs WAG).
- */
-export function buildDivisionSeries(
+/** Distinct levels present, most-recent first. */
+export function listLevels(competitions: CompetitionRow[]): GroupOption[] {
+  return tally(competitions, levelKey);
+}
+
+/** Distinct division buckets within one level, most-recent first. */
+export function listDivisions(
   competitions: CompetitionRow[],
-  division: string,
+  level: string
+): GroupOption[] {
+  return tally(
+    competitions.filter((c) => levelKey(c) === level),
+    divisionKey
+  );
+}
+
+/**
+ * Whether a level actually uses divisions — i.e. any bucket other than the
+ * synthetic "No division". Drives whether the UI shows a Division filter.
+ */
+export function levelHasDivisions(divisions: GroupOption[]): boolean {
+  return divisions.some((d) => d.value !== NO_DIVISION);
+}
+
+/**
+ * Rows for the line chart within one competitive group, oldest to newest. Pass
+ * `division = null` to include the whole level (used when the level has no
+ * divisions); pass a division bucket to restrict to it. Two divisions are never
+ * combined.
+ */
+export function buildSeries(
+  competitions: CompetitionRow[],
+  level: string,
+  division: string | null,
   apparatusIds: string[]
 ): ChartRow[] {
-  const inDivision = competitions.filter((c) => divisionKey(c) === division);
-  const sorted = [...inDivision].sort((a, b) =>
+  const inGroup = competitions.filter(
+    (c) =>
+      levelKey(c) === level &&
+      (division === null || divisionKey(c) === division)
+  );
+  const sorted = [...inGroup].sort((a, b) =>
     compareDateAsc(a.start_date, b.start_date)
   );
 
@@ -121,8 +157,7 @@ export function buildDivisionSeries(
 
 /**
  * Of the requested apparatus, which actually have at least one score in the
- * given rows. Lets the chart draw only lines that carry data, so an apparatus
- * the gymnast never competed in this division isn't shown as a flat empty line.
+ * given rows. Lets the chart draw only lines that carry data.
  */
 export function apparatusWithData(
   rows: ChartRow[],

@@ -20,8 +20,8 @@ export async function createScore(formData: FormData) {
   }
 
   const name = formData.get('name') as string;
-  const level = formData.get('level') as string | null;
-  const division = formData.get('division') as string | null;
+  const level = (formData.get('level') as string) || null;
+  const division = (formData.get('division') as string) || null;
   const discipline = formData.get('discipline') as string;
 
   const showStartValue = formData.get('show_start_value') === 'true';
@@ -114,8 +114,8 @@ export async function updateCompetition(id: string, formData: FormData) {
   if (!user) redirect('/login');
 
   const name = formData.get('name') as string;
-  const level = formData.get('level') as string | null;
-  const division = formData.get('division') as string | null;
+  const level = (formData.get('level') as string) || null;
+  const division = (formData.get('division') as string) || null;
   const discipline = formData.get('discipline') as string;
 
   const showStartValue = formData.get('show_start_value') === 'true';

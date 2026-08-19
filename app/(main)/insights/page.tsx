@@ -33,7 +33,7 @@ export default async function InsightsPage() {
   // not depend on the `competitions_with_scores` view exposing `division`.
   const { data: competitions, error } = await supabase
     .from('competitions')
-    .select('id, name, start_date, division, scores(apparatus, value)')
+    .select('id, name, start_date, level, division, scores(apparatus, value)')
     .eq('gymnast_id', activeGymnastId)
     .order('start_date', { ascending: true, nullsFirst: false })
     .limit(MAX_COMPETITIONS);
