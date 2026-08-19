@@ -66,6 +66,7 @@ export function CompetitionForm({
   const [showPlace, setShowPlace] = useState(initialData?.show_place ?? true);
   const [level, setLevel] = useState(initialData?.level ?? '');
   const [division, setDivision] = useState(initialData?.division ?? '');
+  const isWAG = discipline === 'WAG';
 
   // Preserve a pre-existing level that isn't one of the standard options
   // (e.g. an Xcel or MSO-imported value) so editing never silently drops it.
@@ -146,42 +147,68 @@ export function CompetitionForm({
               />
             </div>
 
+            {/*
+              Men's uses fixed dropdowns (Level 3-10, Division 1/2). Women's
+              keeps free-text so Xcel levels and women's divisions aren't
+              forced into the men's vocabulary — the graph partitions on
+              whatever strings are entered either way.
+            */}
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="level">Level (Optional)</Label>
-              <Select value={level} onValueChange={setLevel}>
-                <SelectTrigger id="level">
-                  <SelectValue placeholder="Select level" />
-                </SelectTrigger>
-                <SelectContent>
-                  {levelOptions.map((l) => (
-                    <SelectItem key={l} value={l}>
-                      {LEVEL_OPTIONS.includes(l) ? `Level ${l}` : l}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isWAG ? (
+                <Input
+                  type="text"
+                  id="level"
+                  value={level}
+                  onChange={(e) => setLevel(e.target.value)}
+                  placeholder="e.g. Level 4 or Gold"
+                />
+              ) : (
+                <Select value={level} onValueChange={setLevel}>
+                  <SelectTrigger id="level">
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {levelOptions.map((l) => (
+                      <SelectItem key={l} value={l}>
+                        {LEVEL_OPTIONS.includes(l) ? `Level ${l}` : l}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="division">Division (Optional)</Label>
-              <Select
-                value={division || NO_DIVISION}
-                onValueChange={(v) =>
-                  setDivision(v === NO_DIVISION ? '' : v)
-                }
-              >
-                <SelectTrigger id="division">
-                  <SelectValue placeholder="No division" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_DIVISION}>No division</SelectItem>
-                  {DIVISION_OPTIONS.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      Division {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isWAG ? (
+                <Input
+                  type="text"
+                  id="division"
+                  value={division}
+                  onChange={(e) => setDivision(e.target.value)}
+                  placeholder="Optional"
+                />
+              ) : (
+                <Select
+                  value={division || NO_DIVISION}
+                  onValueChange={(v) =>
+                    setDivision(v === NO_DIVISION ? '' : v)
+                  }
+                >
+                  <SelectTrigger id="division">
+                    <SelectValue placeholder="No division" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_DIVISION}>No division</SelectItem>
+                    {DIVISION_OPTIONS.map((d) => (
+                      <SelectItem key={d} value={d}>
+                        Division {d}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             <div className="grid w-full items-center gap-1.5">
