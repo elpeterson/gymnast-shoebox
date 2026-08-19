@@ -33,6 +33,16 @@
     --ring: 245 49% 25%;
 
     --radius: 0.5rem;
+
+    /* Per-apparatus chart colors — six distinct hues (light theme). */
+    --chart-floor: 217 91% 60%; /* blue */
+    --chart-pommel: 25 95% 53%; /* orange */
+    --chart-rings: 142 71% 45%; /* green */
+    --chart-vault: 262 83% 58%; /* violet */
+    --chart-pbars: 38 92% 50%; /* amber */
+    --chart-highbar: 330 81% 60%; /* magenta */
+    --chart-ubars: 189 94% 43%; /* cyan (WAG) */
+    --chart-beam: 0 84% 60%; /* red (WAG) */
   }
 
   .dark {
@@ -63,6 +73,16 @@
     --border: 245 20% 20%;
     --input: 245 20% 20%;
     --ring: 245 50% 60%;
+
+    /* Per-apparatus chart colors — lighter/brighter for dark backgrounds. */
+    --chart-floor: 213 94% 68%; /* blue */
+    --chart-pommel: 27 96% 61%; /* orange */
+    --chart-rings: 142 69% 58%; /* green */
+    --chart-vault: 255 92% 76%; /* violet */
+    --chart-pbars: 43 96% 56%; /* amber */
+    --chart-highbar: 329 86% 70%; /* magenta */
+    --chart-ubars: 187 92% 55%; /* cyan (WAG) */
+    --chart-beam: 0 91% 71%; /* red (WAG) */
   }
 }
 

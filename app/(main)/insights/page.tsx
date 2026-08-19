@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { ensureActiveGymnast } from '@/app/actions/gymnast';
-import { ConsistencyView } from '@/components/consistency-view';
-import type { CompetitionWithScores } from '@/lib/consistency';
+import { ConsistencyInsights } from '@/components/consistency-insights';
+import type { CompetitionRow } from '@/lib/insights';
 
-// The whole score history feeds the statistics, so this page is not paginated.
-// The cap is a defensive bound; no real gymnast approaches it.
+// The whole season feeds the chart, so this page is not paginated. The cap is a
+// defensive bound; no real gymnast approaches it.
 const MAX_COMPETITIONS = 500;
 
 export default async function InsightsPage() {
@@ -29,9 +29,11 @@ export default async function InsightsPage() {
     .eq('id', activeGymnastId)
     .single();
 
+  // Read division from the base table + embedded scores, so the feature does
+  // not depend on the `competitions_with_scores` view exposing `division`.
   const { data: competitions, error } = await supabase
-    .from('competitions_with_scores')
-    .select('id, name, start_date, scores')
+    .from('competitions')
+    .select('id, name, start_date, level, division, scores(apparatus, value)')
     .eq('gymnast_id', activeGymnastId)
     .order('start_date', { ascending: true, nullsFirst: false })
     .limit(MAX_COMPETITIONS);
@@ -43,13 +45,13 @@ export default async function InsightsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-10">
+    <div className="space-y-6 pb-10">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Consistency</h2>
           <p className="text-sm text-muted-foreground">
-            How steady {gymnast?.name ?? 'this gymnast'} is on each apparatus,
-            across every recorded meet.
+            {gymnast?.name ?? 'This gymnast'}&rsquo;s scores across the season,
+            by division.
           </p>
         </div>
         <Button asChild variant="outline">
@@ -60,8 +62,8 @@ export default async function InsightsPage() {
         </Button>
       </div>
 
-      <ConsistencyView
-        competitions={(competitions as CompetitionWithScores[]) ?? []}
+      <ConsistencyInsights
+        competitions={(competitions as CompetitionRow[]) ?? []}
         discipline={gymnast?.discipline ?? 'MAG'}
       />
     </div>
