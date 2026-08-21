@@ -48,7 +48,7 @@ export default async function Dashboard() {
           <Button asChild variant="outline">
             <Link href="/insights">
               <LineChart className="mr-2 h-4 w-4" />
-              Consistency
+              Insights
             </Link>
           </Button>
           <Button asChild variant="outline">
