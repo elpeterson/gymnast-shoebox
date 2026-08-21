@@ -1,0 +1,656 @@
+{
+ "results": [
+  {
+   "ProjectID": "Meet",
+   "QueryID": "lookup_scores2",
+   "parameters": {
+    "LookupIndex": "1",
+    "p_meetid": "36935",
+    "p_eventid": "",
+    "p_session": "",
+    "p_division": "",
+    "p_level": "",
+    "p_gym": "",
+    "p_teamresult": "N",
+    "p_gymnastid": "",
+    "p_gymnastname": "",
+    "p_rotation": "",
+    "p_gymnastnumber": "",
+    "p_sessionkey": "",
+    "p_pagekey": ""
+   },
+   "paging": {
+    "pages": {
+     "page": [
+      {
+       "from": 1,
+       "to": 95,
+       "value": 1
+      }
+     ],
+     "current": 1,
+     "totalrecords": 0,
+     "totalpages": 1
+    },
+    "limit": 5000,
+    "direction": 4
+   },
+   "fields": [
+    {
+     "field": "scoresid",
+     "scoresid": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "meetid",
+     "meetid": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "Season",
+     "Season": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "Modified",
+     "Modified": null,
+     "type": "date",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "eventid",
+     "eventid": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "MeetName",
+     "MeetName": "Meet Name",
+     "type": "text",
+     "display": "Meet Name",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "gymnastid",
+     "gymnastid": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "mastergymnastid",
+     "mastergymnastid": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "first_name",
+     "first_name": "First Name",
+     "type": "text",
+     "display": "First Name",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "last_name",
+     "last_name": "Last Name",
+     "type": "text",
+     "display": "Last Name",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "fullname",
+     "fullname": "Full Name",
+     "type": "text",
+     "display": "Full Name",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "usagnum_hash",
+     "usagnum_hash": "USA Number Hash",
+     "type": "text",
+     "display": "USA Number Hash",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "gymnastnumber",
+     "gymnastnumber": "MSO ID",
+     "type": "text",
+     "display": "MSO ID",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "gym",
+     "gym": "Club Name",
+     "type": "text",
+     "display": "Club Name",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "clubnum",
+     "clubnum": "Club USAG",
+     "type": "text",
+     "display": "Club USAG",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "sess",
+     "sess": "Session",
+     "type": "text",
+     "display": "Session",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "level",
+     "level": "Level",
+     "type": "text",
+     "display": "Level",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "div",
+     "div": "Division",
+     "type": "text",
+     "display": "Division",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventType",
+     "EventType": "Event Type",
+     "type": "text",
+     "display": "Event Type",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventScore1",
+     "EventScore1": "Event Score 1",
+     "type": "decimal",
+     "display": "Event Score 1",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventScore2",
+     "EventScore2": "Event Score 2",
+     "type": "decimal",
+     "display": "Event Score 2",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventScore3",
+     "EventScore3": "Event Score 3",
+     "type": "decimal",
+     "display": "Event Score 3",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventScore4",
+     "EventScore4": "Event Score 4",
+     "type": "decimal",
+     "display": "Event Score 4",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventScore5",
+     "EventScore5": "Event Score 5",
+     "type": "decimal",
+     "display": "Event Score 5",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventScore6",
+     "EventScore6": "Event Score 6",
+     "type": "decimal",
+     "display": "Event Score 6",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "AAScore",
+     "AAScore": "AA Score",
+     "type": "decimal",
+     "display": "AA Score",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventPlace1",
+     "EventPlace1": "Event Place 1",
+     "type": "text",
+     "display": "Event Place 1",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventPlace2",
+     "EventPlace2": "Event Place 2",
+     "type": "text",
+     "display": "Event Place 2",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventPlace3",
+     "EventPlace3": "Event Place 3",
+     "type": "text",
+     "display": "Event Place 3",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventPlace4",
+     "EventPlace4": "Event Place 4",
+     "type": "text",
+     "display": "Event Place 4",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventPlace5",
+     "EventPlace5": "Event Place 5",
+     "type": "text",
+     "display": "Event Place 5",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "EventPlace6",
+     "EventPlace6": "Event Place 6",
+     "type": "text",
+     "display": "Event Place 6",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "AAPlace",
+     "AAPlace": "Event AA Place",
+     "type": "text",
+     "display": "Event AA Place",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigBScore1",
+     "FigBScore1": "Execution Event 1",
+     "type": "decimal",
+     "display": "Execution Event 1",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigBScore2",
+     "FigBScore2": "Execution Event 2",
+     "type": "decimal",
+     "display": "Execution Event 2",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigBScore3",
+     "FigBScore3": "Execution Event 3",
+     "type": "decimal",
+     "display": "Execution Event 3",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigBScore4",
+     "FigBScore4": "Execution Event 4",
+     "type": "decimal",
+     "display": "Execution Event 4",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigBScore5",
+     "FigBScore5": "Execution Event 5",
+     "type": "decimal",
+     "display": "Execution Event 5",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigBScore6",
+     "FigBScore6": "Execution Event 6",
+     "type": "decimal",
+     "display": "Execution Event 6",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigStartVal1",
+     "FigStartVal1": "Difficulty Event 1",
+     "type": "decimal",
+     "display": "Difficulty Event 1",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigStartVal2",
+     "FigStartVal2": "Difficulty Event 2",
+     "type": "decimal",
+     "display": "Difficulty Event 2",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigStartVal3",
+     "FigStartVal3": "Difficulty Event 3",
+     "type": "decimal",
+     "display": "Difficulty Event 3",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigStartVal4",
+     "FigStartVal4": "Difficulty Event 4",
+     "type": "decimal",
+     "display": "Difficulty Event 4",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigStartVal5",
+     "FigStartVal5": "Difficulty Event 5",
+     "type": "decimal",
+     "display": "Difficulty Event 5",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigStartVal6",
+     "FigStartVal6": "Difficulty Event 6",
+     "type": "decimal",
+     "display": "Difficulty Event 6",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigND1",
+     "FigND1": "Neutral Deduction Event 1",
+     "type": "decimal",
+     "display": "Neutral Deduction Event 1",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigND2",
+     "FigND2": "Neutral Deduction Event 2",
+     "type": "decimal",
+     "display": "Neutral Deduction Event 2",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigND3",
+     "FigND3": "Neutral Deduction Event 3",
+     "type": "decimal",
+     "display": "Neutral Deduction Event 3",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigND4",
+     "FigND4": "Neutral Deduction Event 4",
+     "type": "decimal",
+     "display": "Neutral Deduction Event 4",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigND5",
+     "FigND5": "Neutral Deduction Event 5",
+     "type": "decimal",
+     "display": "Neutral Deduction Event 5",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "FigND6",
+     "FigND6": "Neutral Deduction Event 6",
+     "type": "decimal",
+     "display": "Neutral Deduction Event 6",
+     "ForView": true,
+     "ForUpdate": false
+    },
+    {
+     "field": "encoded_gym",
+     "encoded_gym": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "encoded_sess",
+     "encoded_sess": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "encoded_level",
+     "encoded_level": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "encoded_div",
+     "encoded_div": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "encoded_meetname",
+     "encoded_meetname": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "isolated",
+     "isolated": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "hasBio",
+     "hasBio": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "MeetDate",
+     "MeetDate": null,
+     "type": "text",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    },
+    {
+     "field": "UNIX_TIME",
+     "UNIX_TIME": null,
+     "type": "int",
+     "display": null,
+     "ForView": false,
+     "ForUpdate": false
+    }
+   ],
+   "result": {
+    "row": [
+     {
+      "scoresid": "55576296",
+      "meetid": "36935",
+      "Season": "2026-2027",
+      "Modified": "8/6/2026",
+      "eventid": "34129",
+      "MeetName": "2026 U.S. Championships - Men Day 1",
+      "gymnastid": "1001",
+      "mastergymnastid": "",
+      "first_name": "Test",
+      "last_name": "Scored",
+      "fullname": "Test Scored",
+      "usagnum_hash": "HASH1001",
+      "gymnastnumber": "83",
+      "gym": "Mini-Hops",
+      "clubnum": "23262",
+      "sess": "1M",
+      "level": "4D1",
+      "div": "Child B",
+      "EventType": "ARTM",
+      "EventScore1": "12.400000",
+      "EventScore2": "11.994000",
+      "EventScore3": "11.550000",
+      "EventScore4": "12.581000",
+      "EventScore5": "11.450000",
+      "EventScore6": "11.531000",
+      "AAScore": "71.506000",
+      "EventPlace1": "11",
+      "EventPlace2": "11",
+      "EventPlace3": "13",
+      "EventPlace4": "15",
+      "EventPlace5": "13",
+      "EventPlace6": "6",
+      "AAPlace": "8",
+      "FigBScore1": "8.200000",
+      "FigBScore2": "6.700000",
+      "FigBScore3": "8.450000",
+      "FigBScore4": "7.550000",
+      "FigBScore5": "8.450000",
+      "FigBScore6": "7.200000",
+      "FigStartVal1": "4.100000",
+      "FigStartVal2": "4.700000",
+      "FigStartVal3": "3.100000",
+      "FigStartVal4": "4.800000",
+      "FigStartVal5": "3.000000",
+      "FigStartVal6": "4.100000",
+      "FigND1": "0.000000",
+      "FigND2": "0.000000",
+      "FigND3": "0.000000",
+      "FigND4": "-0.300000",
+      "FigND5": "0.000000",
+      "FigND6": "0.000000",
+      "encoded_gym": "Mini-Hops",
+      "encoded_sess": "1M",
+      "encoded_level": "J6",
+      "encoded_div": "Junior%2016",
+      "encoded_meetname": "2026%20U.S.%20Championships%20-%20Men%20Day%201",
+      "isolated": "0",
+      "hasBio": "False",
+      "MeetDate": "",
+      "UNIX_TIME": "1774483200"
+     },
+     {
+      "scoresid": "55576302",
+      "meetid": "36935",
+      "Season": "2026-2027",
+      "Modified": "8/6/2026",
+      "eventid": "34129",
+      "MeetName": "2026 U.S. Championships - Men Day 1",
+      "gymnastid": "1002",
+      "mastergymnastid": "",
+      "first_name": "Test",
+      "last_name": "Unscored",
+      "fullname": "Test Unscored",
+      "usagnum_hash": "HASH1002",
+      "gymnastnumber": "89",
+      "gym": "ZnZ Gym",
+      "clubnum": "932436",
+      "sess": "1M",
+      "level": "4D1",
+      "div": "Child B",
+      "EventType": "ARTM",
+      "EventScore1": "0.000000",
+      "EventScore2": "0.000000",
+      "EventScore3": "0.000000",
+      "EventScore4": "0.000000",
+      "EventScore5": "0.000000",
+      "EventScore6": "0.000000",
+      "AAScore": "0.000000",
+      "EventPlace1": "19=",
+      "EventPlace2": "20",
+      "EventPlace3": "20",
+      "EventPlace4": "20",
+      "EventPlace5": "20",
+      "EventPlace6": "20",
+      "AAPlace": "",
+      "FigBScore1": "0.000000",
+      "FigBScore2": "0.000000",
+      "FigBScore3": "0.000000",
+      "FigBScore4": "0.000000",
+      "FigBScore5": "0.000000",
+      "FigBScore6": "0.000000",
+      "FigStartVal1": "0.000000",
+      "FigStartVal2": "0.000000",
+      "FigStartVal3": "0.000000",
+      "FigStartVal4": "0.000000",
+      "FigStartVal5": "0.000000",
+      "FigStartVal6": "0.000000",
+      "FigND1": "0.000000",
+      "FigND2": "0.000000",
+      "FigND3": "0.000000",
+      "FigND4": "0.000000",
+      "FigND5": "0.000000",
+      "FigND6": "0.000000",
+      "encoded_gym": "ZnZ%20Gym",
+      "encoded_sess": "1M",
+      "encoded_level": "J6",
+      "encoded_div": "Junior%2016",
+      "encoded_meetname": "2026%20U.S.%20Championships%20-%20Men%20Day%201",
+      "isolated": "0",
+      "hasBio": "False",
+      "MeetDate": "",
+      "UNIX_TIME": "1774483200"
+     }
+    ]
+   },
+   "subquery": {
+    "result": {
+     "row": []
+    }
+   },
+   "subresults": []
+  }
+ ]
+}

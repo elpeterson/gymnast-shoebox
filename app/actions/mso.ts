@@ -4,7 +4,12 @@ import * as cheerio from 'cheerio';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ensureActiveGymnast } from './gymnast';
-import { parseScoreRow, parseMeetDates, APPARATUS_MAP } from '@/lib/mso-parser';
+import { parseScoreRow, parseMeetDates } from '@/lib/mso-parser';
+import {
+  msoQuery,
+  parseGymnastMeets,
+  parseMeetResult,
+} from '@/lib/mso-api';
 
 export type MsoMeetSummary = {
   id: string;
@@ -13,9 +18,25 @@ export type MsoMeetSummary = {
   level: string;
   detailsUrl: string;
   isImported?: boolean;
+  // Present when the summary came from the JSON API (enables the JSON import
+  // path, which also carries division). Absent for scraped summaries.
+  meetId?: string;
+  division?: string | null;
+  // The MSO gymnastid used to fetch this meet list. Threaded through so the
+  // import picks the same athlete's row, independent of what's stored on the
+  // gymnast record (which may differ or be unset).
+  athleteMsoId?: string;
 };
 
-export async function fetchMsoMeets(msoId: string) {
+type FetchMeetsResult =
+  | { error: string; success?: undefined; meets?: undefined }
+  | { success: true; meets: MsoMeetSummary[]; error?: undefined };
+
+type ImportResult =
+  | { error: string; success?: undefined; warning?: undefined }
+  | { success: true; warning?: string; error?: undefined };
+
+async function fetchMsoMeetsScrape(msoId: string): Promise<FetchMeetsResult> {
   const supabase = await createClient();
   const activeGymnastId = await ensureActiveGymnast();
 
@@ -94,7 +115,7 @@ export async function fetchMsoMeets(msoId: string) {
   }
 }
 
-export async function importMsoMeet(meet: MsoMeetSummary) {
+async function importMsoMeetScrape(meet: MsoMeetSummary): Promise<ImportResult> {
   const supabase = await createClient();
   const gymnastId = await ensureActiveGymnast();
   const {
@@ -179,5 +200,156 @@ export async function importMsoMeet(meet: MsoMeetSummary) {
     return { success: true };
   } catch {
     return { error: 'Failed to import meet' };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// JSON API path (preferred). Captures level + division, which the scrape drops.
+// ---------------------------------------------------------------------------
+
+async function activeGymnastContext() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const gymnastId = await ensureActiveGymnast();
+  if (!user || !gymnastId) return null;
+  const { data: gymnast } = await supabase
+    .from('gymnasts')
+    .select('discipline, mso_id')
+    .eq('id', gymnastId)
+    .single();
+  return {
+    supabase,
+    user,
+    gymnastId,
+    discipline: gymnast?.discipline ?? 'MAG',
+    msoId: gymnast?.mso_id as string | null | undefined,
+  };
+}
+
+async function fetchMsoMeetsApi(msoId: string): Promise<FetchMeetsResult> {
+  const ctx = await activeGymnastContext();
+  if (!ctx) return { error: 'Authentication required' };
+
+  // The JSON slot mapping is men's-artistic only; women's stays on the scrape.
+  if (ctx.discipline === 'WAG') return fetchMsoMeetsScrape(msoId);
+
+  const rows = await msoQuery('msoGymnast', 'lookup_gymnast', {
+    LookupIndex: 1,
+    p_gymnastid: msoId,
+  });
+  const history = parseGymnastMeets(rows);
+  if (history.length === 0) {
+    return { error: 'No meets found. Double check the Athlete ID.' };
+  }
+
+  const { data: existing } = await ctx.supabase
+    .from('competitions')
+    .select('name')
+    .eq('gymnast_id', ctx.gymnastId);
+  const existingNames = new Set(existing?.map((e) => e.name));
+
+  const meets: MsoMeetSummary[] = history.map((m) => ({
+    id: m.meetId,
+    meetId: m.meetId,
+    athleteMsoId: msoId,
+    name: m.meetName,
+    dateStr: m.monthYear ?? 'Date TBD',
+    level: m.level ?? '',
+    division: m.division,
+    detailsUrl: `https://www.meetscoresonline.com/results/${m.meetId}`,
+    isImported: existingNames.has(m.meetName),
+  }));
+
+  return { success: true, meets };
+}
+
+async function importMsoMeetApi(meet: MsoMeetSummary): Promise<ImportResult> {
+  const ctx = await activeGymnastContext();
+  if (!ctx) return { error: 'Authentication required' };
+  if (!meet.meetId) return { error: 'Missing meet id' };
+
+  // Use the id that fetched the meet list; fall back to the stored one.
+  const athleteId = meet.athleteMsoId || ctx.msoId;
+  if (!athleteId) return { error: 'This gymnast has no MSO Athlete ID set' };
+
+  const rows = await msoQuery('msoMeet', 'lookup_scores2', {
+    LookupIndex: 1,
+    p_meetid: meet.meetId,
+  });
+  // mso_id (the Athlete ID) is the JSON API's gymnastid — verified in the spike.
+  const result = parseMeetResult(rows, athleteId);
+  if (!result) return { error: 'Gymnast not found in this meet' };
+
+  const { data: comp, error: compError } = await ctx.supabase
+    .from('competitions')
+    .insert({
+      user_id: ctx.user.id,
+      gymnast_id: ctx.gymnastId,
+      name: result.meetName || meet.name,
+      level: result.level,
+      division: result.division,
+      start_date: result.date,
+      end_date: result.date,
+      all_around_place: result.allAroundPlace,
+    })
+    .select()
+    .single();
+
+  if (compError) return { error: compError.message };
+
+  const scoreRows = result.scores.map((s) => ({
+    competition_id: comp.id,
+    apparatus: s.apparatus,
+    value: s.value,
+    place: s.place,
+  }));
+
+  if (scoreRows.length > 0) {
+    const { error: scoresError } = await ctx.supabase
+      .from('scores')
+      .insert(scoreRows);
+    if (scoresError) {
+      return { error: 'Meet created but scores failed to save.' };
+    }
+  } else {
+    return {
+      success: true,
+      warning: 'Meet created, but no scores were recorded for it yet.',
+    };
+  }
+
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
+/**
+ * Public entry points: try the JSON API first (richer, more robust), and fall
+ * back to the legacy HTML scrape on any failure so imports never hard-break.
+ */
+export async function fetchMsoMeets(msoId: string): Promise<FetchMeetsResult> {
+  if (!msoId) return { error: 'No MSO ID provided' };
+  try {
+    const viaApi = await fetchMsoMeetsApi(msoId);
+    if ('success' in viaApi) return viaApi;
+    // API returned a handled error (e.g. no meets) — trust it, don't scrape.
+    return viaApi;
+  } catch {
+    // Transport/shape failure — fall back to scraping.
+    return fetchMsoMeetsScrape(msoId);
+  }
+}
+
+export async function importMsoMeet(meet: MsoMeetSummary): Promise<ImportResult> {
+  // Scraped summaries have no meetId; use the scrape importer for those.
+  if (!meet.meetId) return importMsoMeetScrape(meet);
+  // JSON-sourced meet: use the API importer and surface its result. We do NOT
+  // silently fall back to the scrape here — the scrape targets a different page
+  // for a meetId URL and would create an empty competition, hiding the failure.
+  try {
+    return await importMsoMeetApi(meet);
+  } catch {
+    return { error: 'Failed to import meet from MSO. Please try again.' };
   }
 }

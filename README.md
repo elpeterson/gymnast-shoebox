@@ -11,16 +11,24 @@ Gymnast Shoebox is a modern, mobile-first SaaS application designed to solve the
 ## 🚀 Features
 *   **Multi-Gymnast Support:** Track scores for multiple children (siblings) under one parent account.
 *   **MAG & WAG Support:** Full support for both Men's and Women's artistic gymnastics disciplines.
-*   **MeetScoresOnline Integration:** Automatically import meet details and scores using an MSO Athlete ID.
+*   **MeetScoresOnline Integration:** Import a gymnast's full meet history from MeetScoresOnline via its JSON API using an MSO Athlete ID — capturing per-apparatus scores, all-around, and each meet's level & division.
+*   **Consistency Insights:** A per-apparatus line graph of a gymnast's scores across the season, filtered by level and division so non-comparable groups are never mixed (see [Insights](#-insights)).
+*   **Structured Levels & Divisions (Men's):** Level and division are captured as structured fields mirroring the values used in competition — numeric levels 3–10 with Division 1/2, plus Elite/Junior/Senior tracks and elite codes. Women's keeps flexible free-text entry.
 *   **Live Meet Entry:** Enter scores as they happen. Supports incomplete meets and future schedule planning.
 *   **Detailed Scoring:** Track Final Score, Start Value, Placement, and All-Around placement.
 *   **Deep Customization:** Toggle fields (like Start Value) to declutter the UI on small screens.
 *   **Themeable:** Dark Mode support with custom "Sterling Gym" branding.
-*   **Secure:** Row Level Security (RLS) ensures data privacy.
+*   **Secure:** Row Level Security (RLS) ensures data privacy — each user sees only their own gymnasts.
+
+## 📊 Insights
+The **Consistency** view (linked from the dashboard) charts a gymnast's apparatus scores over a season:
+- One colored line per apparatus, dates on the X axis and score on the Y axis, with a hover tooltip showing every event's score for a given date.
+- A **Level** filter plus a context-aware **Division / Track** filter, so a Level 4 Division 1 season is never plotted against a Level 5 Division 2 season — those scores aren't comparable.
+- Computed entirely from the gymnast's own stored scores; it uses no other users' data.
 
 ## 🚧 Coming Soon
--   **Offline Support:** PWA capabilities for warehouses with poor signal.
--   **Data Visualizations:** Charts to track progress over the season.
+-   **Offline Support:** PWA capabilities for gyms with poor signal.
+-   **Additional Data Sources:** Manual import from scoring sources beyond MeetScoresOnline.
 -   **Media Uploads:** Attach photos of scorecards or screenshots to meets.
 
 ## 🐛 Known Issues
@@ -47,6 +55,7 @@ This project utilizes a modern, serverless architecture designed for high perfor
 - **Database & Auth:** [Supabase](https://supabase.com/) (PostgreSQL)
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components:** [shadcn/ui](https://ui.shadcn.com/)
+- **Charts:** [Recharts](https://recharts.org/) (via shadcn/ui charts)
 - **Testing:** [Vitest](https://vitest.dev/)
 - **Deployment:** [Vercel](https://vercel.com/)
 
@@ -90,7 +99,8 @@ create table public.competitions (
   name text not null,
   start_date date,
   end_date date,
-  level text,
+  level text,      -- e.g. '4' (men's DP), 'Gold' (women's Xcel)
+  division text,   -- e.g. '1'/'2', a track ('E'/'J'/'S'), or free text
   all_around_place integer,
   show_start_value boolean default false not null,
   show_place boolean default true not null,
@@ -153,7 +163,7 @@ create policy "Users can update own settings" on public.user_settings for update
 create or replace view public.competitions_with_scores as
 select
   c.id, c.user_id, c.gymnast_id, c.name, c.start_date, c.end_date, c.level,
-  c.all_around_place, c.show_start_value, c.show_place, c.created_at,
+  c.division, c.all_around_place, c.show_start_value, c.show_place, c.created_at,
   coalesce(
     (select json_agg(json_build_object('apparatus', s.apparatus, 'value', s.value, 'start_value', s.start_value, 'place', s.place)) from public.scores s where s.competition_id = c.id),
     '[]'::json
