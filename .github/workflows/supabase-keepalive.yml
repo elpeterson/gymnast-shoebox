@@ -1,0 +1,24 @@
+name: Supabase Keep-Alive
+
+# Stopgap: Supabase pauses free-tier projects after ~7 days without activity.
+# A daily anonymous query keeps the project awake until the self-hosted backend lands.
+
+on:
+  schedule:
+    - cron: '17 13 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          curl --fail --silent --show-error --max-time 30 --retry 3 --retry-delay 10 \
+            -o /dev/null -w 'HTTP %{http_code}\n' \
+            -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
+            "${SUPABASE_URL}/rest/v1/gymnasts?select=id&limit=1"
