@@ -2,12 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { parseSettingUpdate, type UserSettings } from '@/lib/settings';
 
-export type UserSettings = {
-  theme: string;
-  show_start_values: boolean;
-  show_placements: boolean;
-};
+export type { UserSettings };
 
 const DEFAULT_SETTINGS: UserSettings = {
   theme: 'system',
@@ -43,10 +40,13 @@ export async function updateSetting(
 
   if (!user) return { error: 'Not authenticated' };
 
+  const update = parseSettingUpdate(key, value);
+  if (!update) return { error: 'Invalid setting' };
+
   const { error } = await supabase.from('user_settings').upsert(
     {
+      ...update,
       user_id: user.id,
-      [key]: value,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' },

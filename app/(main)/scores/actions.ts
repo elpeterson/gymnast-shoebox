@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { ensureActiveGymnast } from '@/app/actions/gymnast';
 import { MAG_APPARATUS, WAG_APPARATUS } from '@/lib/constants';
+import { insertCompetitionWithScores } from '@/lib/competitions';
 
 export async function createScore(formData: FormData) {
   const supabase = await createClient();
@@ -40,9 +41,22 @@ export async function createScore(formData: FormData) {
       ? WAG_APPARATUS.map((a) => a.id)
       : MAG_APPARATUS.map((a) => a.id);
 
-  const { data: competition, error: compError } = await supabase
-    .from('competitions')
-    .insert({
+  const scoreInserts = apparatusList.map((app) => {
+    const rawValue = formData.get(app);
+    const rawPlace = formData.get(`${app}_place`);
+    const rawStartValue = formData.get(`${app}_sv`);
+
+    return {
+      apparatus: app,
+      value: rawValue ? parseFloat(rawValue.toString()) : null,
+      place: rawPlace ? parseInt(rawPlace.toString()) : null,
+      start_value: rawStartValue ? parseFloat(rawStartValue.toString()) : null,
+    };
+  });
+
+  const inserted = await insertCompetitionWithScores(
+    supabase,
+    {
       user_id: user.id,
       gymnast_id: gymnastId,
       name: name,
@@ -53,31 +67,12 @@ export async function createScore(formData: FormData) {
       all_around_place: allAroundPlace,
       show_start_value: showStartValue,
       show_place: showPlace,
-    })
-    .select()
-    .single();
+    },
+    scoreInserts,
+  );
 
-  if (compError) return { error: 'Failed to create competition record.' };
-
-  const scoreInserts = apparatusList.map((app) => {
-    const rawValue = formData.get(app);
-    const rawPlace = formData.get(`${app}_place`);
-    const rawStartValue = formData.get(`${app}_sv`);
-
-    return {
-      competition_id: competition.id,
-      apparatus: app,
-      value: rawValue ? parseFloat(rawValue.toString()) : null,
-      place: rawPlace ? parseInt(rawPlace.toString()) : null,
-      start_value: rawStartValue ? parseFloat(rawStartValue.toString()) : null,
-    };
-  });
-
-  const { error: scoreError } = await supabase
-    .from('scores')
-    .insert(scoreInserts);
-
-  if (scoreError) return { error: 'Failed to save apparatus scores.' };
+  if (inserted.error === 'competition') return { error: 'Failed to create competition record.' };
+  if (inserted.error === 'scores') return { error: 'Failed to save apparatus scores.' };
 
   revalidatePath('/dashboard');
   return { success: true };
