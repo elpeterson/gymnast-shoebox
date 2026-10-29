@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -76,10 +76,13 @@ export function ConsistencyInsights({
   );
 
   // When the level changes, reset the division to that level's most recent one.
-  useEffect(() => {
-    setDivision(showDivision ? divisions[0]?.value ?? null : null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [level]);
+  const handleLevelChange = (next: string) => {
+    setLevel(next);
+    const nextDivisions = listDivisions(competitions, next);
+    setDivision(
+      levelHasDivisions(nextDivisions) ? nextDivisions[0]?.value ?? null : null
+    );
+  };
 
   const rows = useMemo(
     () => buildSeries(competitions, level, showDivision ? division : null, apparatusIds),
@@ -118,7 +121,7 @@ export function ConsistencyInsights({
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Level</span>
-            <Select value={level} onValueChange={setLevel}>
+            <Select value={level} onValueChange={handleLevelChange}>
               <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder="Level" />
               </SelectTrigger>
