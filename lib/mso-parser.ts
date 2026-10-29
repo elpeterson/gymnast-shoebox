@@ -30,6 +30,25 @@ export type ParsedDates = {
 
 export { APPARATUS_MAP };
 
+const MSO_ORIGIN = 'https://www.meetscoresonline.com';
+
+/**
+ * Return the canonical MSO results URL for `url`, or null if it points
+ * anywhere else. The meet summary comes back from the client, so its URL must
+ * not be fetched server-side without this check.
+ */
+export function msoResultsUrl(url: string): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.origin !== MSO_ORIGIN) return null;
+  if (!parsed.pathname.startsWith('/results/')) return null;
+  return `${MSO_ORIGIN}${parsed.pathname}${parsed.search}`;
+}
+
 export function parseScoreRow(
   eventLabel: string,
   scoreText: string,

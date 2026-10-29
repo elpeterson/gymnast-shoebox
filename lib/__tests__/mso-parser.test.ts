@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseScoreRow, parseMeetDates, APPARATUS_MAP } from '../mso-parser';
+import { parseScoreRow, parseMeetDates, APPARATUS_MAP, msoResultsUrl } from '../mso-parser';
 
 describe('APPARATUS_MAP', () => {
   it('maps common MAG display names to db ids', () => {
@@ -99,5 +99,26 @@ describe('parseMeetDates', () => {
     expect(new Date(result.startDate!).getTime()).toBeLessThan(
       new Date(result.endDate!).getTime(),
     );
+  });
+});
+
+describe('msoResultsUrl', () => {
+  it('accepts MSO results pages and canonicalises them', () => {
+    expect(msoResultsUrl('https://www.meetscoresonline.com/results/12345')).toBe(
+      'https://www.meetscoresonline.com/results/12345',
+    );
+    expect(msoResultsUrl('https://www.meetscoresonline.com/results/12345?athlete=9')).toBe(
+      'https://www.meetscoresonline.com/results/12345?athlete=9',
+    );
+  });
+
+  it('rejects other hosts, schemes and paths', () => {
+    expect(msoResultsUrl('https://evil.example/results/1')).toBeNull();
+    expect(msoResultsUrl('http://www.meetscoresonline.com/results/1')).toBeNull();
+    expect(msoResultsUrl('https://www.meetscoresonline.com.evil.example/results/1')).toBeNull();
+    expect(msoResultsUrl('https://user@169.254.169.254/results/1')).toBeNull();
+    expect(msoResultsUrl('https://www.meetscoresonline.com/Account/Settings')).toBeNull();
+    expect(msoResultsUrl('/results/1')).toBeNull();
+    expect(msoResultsUrl('not a url')).toBeNull();
   });
 });

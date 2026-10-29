@@ -4,7 +4,8 @@ import * as cheerio from 'cheerio';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ensureActiveGymnast } from './gymnast';
-import { parseScoreRow, parseMeetDates } from '@/lib/mso-parser';
+import { parseScoreRow, parseMeetDates, msoResultsUrl } from '@/lib/mso-parser';
+import { insertCompetitionWithScores } from '@/lib/competitions';
 import {
   msoQuery,
   parseGymnastMeets,
@@ -124,8 +125,11 @@ async function importMsoMeetScrape(meet: MsoMeetSummary): Promise<ImportResult> 
 
   if (!user || !gymnastId) return { error: 'Authentication required' };
 
+  const detailsUrl = msoResultsUrl(meet.detailsUrl);
+  if (!detailsUrl) return { error: 'Invalid meet link' };
+
   try {
-    const response = await fetch(meet.detailsUrl, {
+    const response = await fetch(detailsUrl, {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -161,9 +165,9 @@ async function importMsoMeetScrape(meet: MsoMeetSummary): Promise<ImportResult> 
 
     const { startDate, endDate } = parseMeetDates(realDateStr);
 
-    const { data: comp, error: compError } = await supabase
-      .from('competitions')
-      .insert({
+    const inserted = await insertCompetitionWithScores(
+      supabase,
+      {
         user_id: user.id,
         gymnast_id: gymnastId,
         name: realName,
@@ -171,25 +175,15 @@ async function importMsoMeetScrape(meet: MsoMeetSummary): Promise<ImportResult> 
         start_date: startDate,
         end_date: endDate,
         all_around_place: allAroundPlace,
-      })
-      .select()
-      .single();
+      },
+      scoresToInsert,
+    );
 
-    if (compError) return { error: compError.message };
+    if (inserted.error === 'competition') return { error: 'Failed to create meet.' };
+    if (inserted.error === 'scores') return { error: 'Scores failed to save; the meet was not imported.' };
 
-    const formattedScores = scoresToInsert.map((s) => ({
-      competition_id: comp.id,
-      apparatus: s.apparatus,
-      value: s.value,
-      place: s.place,
-    }));
-
-    if (formattedScores.length > 0) {
-      const { error: scoresError } = await supabase
-        .from('scores')
-        .insert(formattedScores);
-      if (scoresError) return { error: 'Meet created but scores failed to save.' };
-    } else {
+    revalidatePath('/dashboard');
+    if (scoresToInsert.length === 0) {
       return {
         success: true,
         warning: "Meet created, but score table format didn't match.",
@@ -282,9 +276,9 @@ async function importMsoMeetApi(meet: MsoMeetSummary): Promise<ImportResult> {
   const result = parseMeetResult(rows, athleteId);
   if (!result) return { error: 'Gymnast not found in this meet' };
 
-  const { data: comp, error: compError } = await ctx.supabase
-    .from('competitions')
-    .insert({
+  const inserted = await insertCompetitionWithScores(
+    ctx.supabase,
+    {
       user_id: ctx.user.id,
       gymnast_id: ctx.gymnastId,
       name: result.meetName || meet.name,
@@ -293,34 +287,26 @@ async function importMsoMeetApi(meet: MsoMeetSummary): Promise<ImportResult> {
       start_date: result.date,
       end_date: result.date,
       all_around_place: result.allAroundPlace,
-    })
-    .select()
-    .single();
+    },
+    result.scores.map((s) => ({
+      apparatus: s.apparatus,
+      value: s.value,
+      place: s.place,
+    })),
+  );
 
-  if (compError) return { error: compError.message };
+  if (inserted.error === 'competition') return { error: 'Failed to create meet.' };
+  if (inserted.error === 'scores') {
+    return { error: 'Scores failed to save; the meet was not imported.' };
+  }
 
-  const scoreRows = result.scores.map((s) => ({
-    competition_id: comp.id,
-    apparatus: s.apparatus,
-    value: s.value,
-    place: s.place,
-  }));
-
-  if (scoreRows.length > 0) {
-    const { error: scoresError } = await ctx.supabase
-      .from('scores')
-      .insert(scoreRows);
-    if (scoresError) {
-      return { error: 'Meet created but scores failed to save.' };
-    }
-  } else {
+  revalidatePath('/dashboard');
+  if (result.scores.length === 0) {
     return {
       success: true,
       warning: 'Meet created, but no scores were recorded for it yet.',
     };
   }
-
-  revalidatePath('/dashboard');
   return { success: true };
 }
 
