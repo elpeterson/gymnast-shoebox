@@ -12,6 +12,8 @@ export function BetaBanner() {
   useEffect(() => {
     const dismissed = localStorage.getItem('gymnast_beta_banner_dismissed');
     if (!dismissed) {
+      // localStorage is client-only; reading it after mount keeps SSR markup stable.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsVisible(true);
     }
   }, []);
