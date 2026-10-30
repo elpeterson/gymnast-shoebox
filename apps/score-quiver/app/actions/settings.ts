@@ -12,6 +12,8 @@ const DEFAULT_SETTINGS: UserSettings = {
 };
 
 export async function getUserSettings() {
+  // Public pages render without Supabase configured (local archer POC).
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return DEFAULT_SETTINGS;
   const supabase = await createClient();
   const {
     data: { user },

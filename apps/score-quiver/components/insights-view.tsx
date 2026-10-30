@@ -70,9 +70,12 @@ const RING_LABELS: Record<(typeof RINGS)[number], string> = {
 export function InsightsView({
   groups,
   trends,
+  eventHrefPrefix = '/events/',
 }: {
   groups: SetupGroup[];
   trends: Record<string, TrendPoint[]>;
+  /** Where an event row links: `${prefix}${eventId}`. */
+  eventHrefPrefix?: string;
 }) {
   const [setup, setSetup] = useState(groups[0].key);
   const [metric, setMetric] = useState<Metric>('arrowAverage');
@@ -324,7 +327,7 @@ export function InsightsView({
               {[...points].reverse().map((p) => (
                 <tr key={p.eventId} className="border-t">
                   <td className="py-2 pr-2">
-                    <Link href={`/events/${p.eventId}`} className="hover:underline">
+                    <Link href={`${eventHrefPrefix}${p.eventId}`} className="hover:underline">
                       {p.name}
                     </Link>
                     <div className="text-xs text-muted-foreground">
