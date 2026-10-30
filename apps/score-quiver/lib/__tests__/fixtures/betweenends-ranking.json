@@ -1,0 +1,43 @@
+{
+  "event": {
+    "id": 4378,
+    "enm": "Ranking Round",
+    "etp": "RankingEvent",
+    "dor": 1,
+    "rds": 2,
+    "epr": 2,
+    "ape": 3,
+    "srl": 0,
+    "tnm": "Example Indoor Shoot",
+    "tdt": "Oct 23, 2026 - Oct 25, 2026",
+    "tlc": "Example Range, Springfield, MA",
+    "tnl": {
+      "101": { "id": 101, "nm": "Example Range, Friday 7pm" },
+      "102": { "id": 102, "nm": "Example Range, Saturday 9am" }
+    },
+    "nos": 1,
+    "rps": {
+      "9001": { "aid": 9001, "fnm": "Alex ", "lnm": "Sample", "alt": " 123456C", "cnd": "ru13w", "tm": "Example Archers", "tgt": ["5B"], "tnl": [102], "rtl": "", "tbs": "" },
+      "9002": { "aid": 9002, "fnm": "Blair", "lnm": "Example", "alt": "N/A", "cnd": "CU21M", "tm": "", "tgt": ["7A"], "tnl": [101], "rtl": "|55", "tbs": "" },
+      "9003": { "aid": 9003, "fnm": "Casey", "lnm": "Test", "alt": "654321", "cnd": "BU15W", "tm": "Example Archers", "tgt": ["3C"], "tnl": [102], "rtl": "", "tbs": "" },
+      "9004": { "aid": 9004, "fnm": "Drew", "lnm": "Placeholder", "alt": "", "cnd": "RU18M", "tm": "Other Club", "tgt": [], "tnl": [], "rtl": "", "tbs": "" }
+    },
+    "cgs": [
+      { "nm": "Recurve U13 (Bowman) Women", "dor": 1, "ars": [{ "aid": 9001 }], "cut": 0 },
+      { "nm": "Compound U21 Men", "dor": 2, "ars": [{ "aid": 9002 }], "cut": 0 },
+      { "nm": "Barebow U15 Women", "dor": 3, "ars": [{ "aid": 9003 }], "cut": 0 },
+      { "nm": "Empty Division", "dor": 4, "ars": null, "cut": 0 },
+      null
+    ],
+    "hdn": "00000",
+    "dld": 1
+  },
+  "scores": {
+    "ars": {
+      "9001": "T98T97987M76",
+      "9002": "TTTTT9TTT999",
+      "9003": "T98765EEEEEE",
+      "9004": "XT9MMMa98TX5T"
+    }
+  }
+}
