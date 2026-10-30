@@ -13,7 +13,7 @@ If on `main`, stop and propose a branch name (`feat/`, `fix/`, `chore/`, `docs/`
 ## 2. Checks (all must pass)
 Run in order and stop at the first failure; report the failing output and offer to fix it:
 1. `npm run lint`
-2. `npx tsc --noEmit`
+2. `npm run typecheck`
 3. `npm test`
 4. `NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=placeholder NEXT_TELEMETRY_DISABLED=1 npm run build`
 
