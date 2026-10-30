@@ -32,7 +32,10 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Release
+      # Each app releases from its own folder; semantic-release-monorepo only
+      # counts commits that touch that folder. Score Quiver joins with SQ-016.
+      - name: Release Gymnast Shoebox
+        working-directory: apps/gymnast-shoebox
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release

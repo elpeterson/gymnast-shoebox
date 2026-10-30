@@ -1,5 +1,9 @@
 {
-  "branches": ["main"],
+  "extends": "semantic-release-monorepo",
+  "tagFormat": "v${version}",
+  "branches": [
+    "main"
+  ],
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
