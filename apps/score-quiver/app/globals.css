@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 60 20% 99%;
+    --foreground: 160 30% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 160 30% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 30% 10%;
+
+    --primary: 158 45% 20%; /* Quiver green */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 45 93% 52%; /* Target gold */
+    --secondary-foreground: 160 30% 10%;
+
+    --muted: 150 12% 95%;
+    --muted-foreground: 160 8% 42%;
+
+    --accent: 150 12% 95%;
+    --accent-foreground: 158 45% 20%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 150 10% 89%;
+    --input: 150 10% 89%;
+    --ring: 158 45% 20%;
+
+    --radius: 0.5rem;
+
+    /* Target-face colors, used for arrow chips and distribution charts. */
+    --face-gold: 48 96% 53%;
+    --face-red: 0 78% 52%;
+    --face-blue: 205 85% 48%;
+    --face-black: 220 12% 16%;
+    --face-white: 0 0% 100%;
+    --face-miss: 215 14% 72%;
+
+    /* Trend lines. */
+    --chart-1: 158 55% 32%;
+    --chart-2: 25 95% 53%;
+    --chart-3: 205 85% 48%;
+    --chart-4: 280 60% 55%;
+    --chart-5: 45 93% 45%;
+  }
+
+  .dark {
+    --background: 160 20% 7%;
+    --foreground: 60 10% 96%;
+
+    --card: 160 18% 10%;
+    --card-foreground: 60 10% 96%;
+
+    --popover: 160 18% 10%;
+    --popover-foreground: 60 10% 96%;
+
+    --primary: 152 45% 55%;
+    --primary-foreground: 160 30% 8%;
+
+    --secondary: 45 90% 55%;
+    --secondary-foreground: 160 30% 8%;
+
+    --muted: 160 12% 16%;
+    --muted-foreground: 150 8% 68%;
+
+    --accent: 160 12% 16%;
+    --accent-foreground: 60 10% 96%;
+
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 160 12% 18%;
+    --input: 160 12% 18%;
+    --ring: 152 45% 55%;
+
+    --face-gold: 48 96% 56%;
+    --face-red: 0 80% 60%;
+    --face-blue: 205 90% 60%;
+    --face-black: 220 10% 30%;
+    --face-white: 0 0% 92%;
+    --face-miss: 215 10% 40%;
+
+    --chart-1: 152 55% 55%;
+    --chart-2: 27 96% 61%;
+    --chart-3: 205 90% 65%;
+    --chart-4: 280 70% 72%;
+    --chart-5: 45 90% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .no-spinners::-webkit-outer-spin-button,
+  .no-spinners::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .no-spinners {
+    -moz-appearance: textfield;
+  }
+}

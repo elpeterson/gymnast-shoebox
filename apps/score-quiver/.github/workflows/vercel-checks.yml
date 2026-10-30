@@ -1,0 +1,31 @@
+name: Vercel Deployment Checks
+
+on:
+  repository_dispatch:
+    types: [vercel.deployment.ready]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm clean-install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Notify Vercel
+        uses: vercel/repository-dispatch/actions/status@v1
+        if: always()
+        with:
+          name: 'Test'
