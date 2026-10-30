@@ -17,7 +17,9 @@ export function ScorecardGrid({
   bonusLabels: string[];
 }) {
   const ends = [...round.ends].sort((a, b) => a.end_number - b.end_number);
-  let running = 0;
+  // End sums and running totals, worked out before render (no mutation in JSX).
+  const sums = ends.map((end) => end.arrows.reduce((s, a) => s + arrowValue(a), 0));
+  const runningTotals = sums.map((_, i) => sums.slice(0, i + 1).reduce((s, v) => s + v, 0));
 
   return (
     <div className="overflow-x-auto">
@@ -31,9 +33,8 @@ export function ScorecardGrid({
           </tr>
         </thead>
         <tbody>
-          {ends.map((end) => {
-            const sum = end.arrows.reduce((s, a) => s + arrowValue(a), 0);
-            running += sum;
+          {ends.map((end, i) => {
+            const sum = sums[i];
             return (
               <tr key={end.end_number} className="border-t">
                 <td className="py-1.5 pr-2 text-muted-foreground">
@@ -48,7 +49,7 @@ export function ScorecardGrid({
                 </td>
                 <td className="py-1.5 px-2 text-right font-medium">{sum}</td>
                 <td className="py-1.5 pl-2 text-right text-muted-foreground">
-                  {running}
+                  {runningTotals[i]}
                 </td>
               </tr>
             );

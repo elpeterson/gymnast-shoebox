@@ -1,7 +1,14 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
+// Public pages: no session needed (the archer POC is lookup-by-number only).
+const PUBLIC_PREFIXES = ['/archer'];
+
 export async function proxy(request: NextRequest) {
+  if (PUBLIC_PREFIXES.some((p) => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(`${p}/`))) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
