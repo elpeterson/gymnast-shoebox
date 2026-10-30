@@ -3,6 +3,7 @@
 Mobile-first app where parents record their gymnasts' meet scores (MAG and WAG), import history from MeetScoresOnline (MSO), and chart consistency per apparatus. Public repo: never commit secrets or real athletes' data.
 
 ## Where things live
+- **Monorepo** (SQ-015, moving to `shoebox`): the app lives in `apps/gymnast-shoebox/`; app paths below are relative to it. Root holds `package.json` (npm workspaces, Turborepo), `turbo.json`, `.github/`, `.claude/`, `.releaserc`. Shared packages will go in `packages/`.
 - **App:** Next.js 16 App Router. Pages in `app/(main)/` (dashboard, scores/new, competitions/[id]/edit, import, insights, account, about) and `app/(auth)/login/`. Auth callback `app/auth/callback/route.ts`. Session refresh and login redirects in `proxy.ts` (Next 16's middleware).
 - **Server actions:** `app/actions/` (gymnast, mso, settings) and colocated `actions.ts` files. Every action is a public endpoint: treat its arguments as untrusted input.
 - **Logic:** `lib/` holds pure, tested helpers: `mso-api.ts` (JSON API client, query allowlist), `mso-parser.ts` (scrape parsing, `msoResultsUrl`), `insights.ts`, `constants.ts`, `competitions.ts` (`insertCompetitionWithScores`), `redirect.ts` (`safeNextPath`), `settings.ts` (`parseSettingUpdate`). Supabase clients in `lib/supabase/`.
@@ -10,10 +11,10 @@ Mobile-first app where parents record their gymnasts' meet scores (MAG and WAG),
 - **Database:** Supabase Postgres. Schema, RLS and the `competitions_with_scores` view are in `supabase/migrations/`. Tables: `gymnasts`, `competitions`, `scores` (unique per competition + apparatus), `user_settings`.
 - **Tests:** Vitest, `lib/__tests__/` with MSO fixtures in `lib/__tests__/fixtures/`.
 - **CI/CD:** `.github/workflows/`: `ci.yml` (lint, typecheck, test, build on PRs and main), `release.yml` (semantic-release on main), `vercel-checks.yml`, `supabase-keepalive.yml` (stopgap until the backend is self-hosted). Vercel deploys from GitHub; production is gymnastshoebox.elpeterson.com.
-- **Env:** `.env.example` lists the three variables. `.env.local` holds real values: never read or print it.
+- **Env:** `.env.example` lists the three variables. `.env.local` (in `apps/gymnast-shoebox/`) holds real values: never read or print it.
 
 ## Commands
-`npm run dev` · `npm run lint` · `npx tsc --noEmit` · `npm test` · `npm run build` (needs the two `NEXT_PUBLIC_SUPABASE_*` vars; placeholders work, every route is dynamic). `/ship` runs all checks and prepares a PR; `/validate-setup` checks this Claude setup.
+Run from the repo root (Turbo runs each app's script): `npm run dev` · `npm run lint` · `npm run typecheck` · `npm test` · `npm run build` (needs the two `NEXT_PUBLIC_SUPABASE_*` vars; placeholders work, every route is dynamic). Supabase CLI commands run from `apps/gymnast-shoebox/`. `/ship` runs all checks and prepares a PR; `/validate-setup` checks this Claude setup.
 
 ## Rules
 - **Security invariants.** Every table has RLS scoped to `auth.uid()`; keep it that way in any new migration. Server actions also filter by `user.id` and validate input (whitelists, helpers in `lib/`). Never fetch a client-supplied URL server-side without an origin allowlist. Redirect targets go through `safeNextPath`. Writes that span tables use a helper that leaves no partial rows.

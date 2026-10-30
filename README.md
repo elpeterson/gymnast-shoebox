@@ -70,13 +70,13 @@ npm install
 ```
 
 ### 2. Environment Setup
-Copy the example file and fill in your Supabase project's URL and publishable key (Project Settings → API):
+The app lives in `apps/gymnast-shoebox/` (npm workspaces + Turborepo; run `npm` commands from the repo root). Copy the example file and fill in your Supabase project's URL and publishable key (Project Settings → API):
 ```bash
-cp .env.example .env.local
+cp apps/gymnast-shoebox/.env.example apps/gymnast-shoebox/.env.local
 ```
 
 ### 3. Database Setup (Supabase)
-The complete schema (tables, row level security policies, and the `competitions_with_scores` view) lives in [`supabase/migrations/`](supabase/migrations/).
+The complete schema (tables, row level security policies, and the `competitions_with_scores` view) lives in [`apps/gymnast-shoebox/supabase/migrations/`](apps/gymnast-shoebox/supabase/migrations/). Run Supabase CLI commands from `apps/gymnast-shoebox/`.
 
 - **New project:** run `supabase db push` with the [Supabase CLI](https://supabase.com/docs/guides/cli), or paste the migration files into the SQL Editor in order.
 - **Existing project** (schema created by hand): mark the initial migration as applied rather than re-running it:
@@ -84,7 +84,7 @@ The complete schema (tables, row level security policies, and the `competitions_
   supabase migration repair --status applied 20261029000000
   ```
 
-Schema changes go in a new timestamped file in `supabase/migrations/`; never edit one that has already been applied.
+Schema changes go in a new timestamped file in `apps/gymnast-shoebox/supabase/migrations/`; never edit one that has already been applied.
 
 ### 4. Run the Server
 ```bash
@@ -99,4 +99,4 @@ npm run test:watch   # watch mode
 npm run test:coverage  # with coverage report
 ```
 
-Tests live in `lib/__tests__/` and are run automatically on every push via GitHub Actions.
+Tests live in `apps/gymnast-shoebox/lib/__tests__/` and are run automatically on every push via GitHub Actions.

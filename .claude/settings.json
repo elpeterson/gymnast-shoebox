@@ -7,6 +7,7 @@
       "Bash(npm test:*)",
       "Bash(npm run build)",
       "Bash(npx tsc --noEmit)",
+      "Bash(npm run typecheck)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -28,7 +29,13 @@
       "Read(./.env.*.local)",
       "Edit(./.env)",
       "Edit(./.env.local)",
-      "Edit(./.env.*.local)"
+      "Edit(./.env.*.local)",
+      "Read(./apps/*/.env)",
+      "Read(./apps/*/.env.local)",
+      "Read(./apps/*/.env.*.local)",
+      "Edit(./apps/*/.env)",
+      "Edit(./apps/*/.env.local)",
+      "Edit(./apps/*/.env.*.local)"
     ]
   },
   "hooks": {
