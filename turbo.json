@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "env": ["NEXT_PUBLIC_*", "NEXT_TELEMETRY_DISABLED"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "lint": {},
+    "typecheck": {},
+    "test": {},
+    "dev": { "cache": false, "persistent": true }
+  }
+}
